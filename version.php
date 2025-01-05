@@ -25,6 +25,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_isycredentials';
-$plugin->version   = 2025010422;
+$plugin->version   = 2025010520;
 $plugin->requires  = 2024042200;
 $plugin->maturity = MATURITY_ALPHA;

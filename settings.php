@@ -34,5 +34,59 @@ if ($hassiteconfig) {
         ''
     ));
 
+    $settings->add(new admin_setting_configtextarea(
+        'local_isycredentials/elm_issuer_data',
+        get_string('elm_issuer_data', 'local_isycredentials'),
+        get_string('elm_issuer_data_desc', 'local_isycredentials'),
+        '{
+            "id": "urn:epass:org:4f246f56-fbd0-4492-ad1e-c780c987a121",
+            "type": "Organisation",
+            "eIDASIdentifier": {
+                "id": "urn:certificateIdentifier:1",
+                "type": "LegalIdentifier",
+                "spatial": {
+                    "id": "http://publications.europa.eu/resource/authority/country/$ISO-639-2/t-CountryCode$",
+                    "type": "Concept",
+                    "inScheme": {
+                        "id": "http://publications.europa.eu/resource/authority/country",
+                        "type": "ConceptScheme"
+                    },
+                    "notation": "country",
+                    "prefLabel": {
+                        "de": "$CountryName$"
+                    }
+                },
+                "notation": "$eIDASIdentifier$"
+            },
+            "location": {
+                "id": "urn:certificateLocation:1",
+                "type": "Location",
+                "address": {
+                    "id": "urn:certificateAddress:1",
+                    "type": "Address",
+                    "countryCode": {
+                        "id": "http://publications.europa.eu/resource/authority/country/$ISO-639-2/t-CountryCode$",
+                        "type": "Concept",
+                        "inScheme": {
+                            "id": "http://publications.europa.eu/resource/authority/country",
+                            "type": "ConceptScheme"
+                        },
+                        "notation": "country",
+                        "prefLabel": {
+                            "de": "$CountryName$"
+                        }
+                    }
+                }
+            },
+            "altLabel": {
+                "de": "$IssuerAlternativeName$"
+            },
+            "legalName": {
+                "de": "$IssuerLegalName$"
+            }
+        }',
+        PARAM_RAW_TRIMMED
+    ));
+
     $ADMIN->add('localplugins', $settings);
 }

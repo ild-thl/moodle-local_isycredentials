@@ -2,6 +2,8 @@
 
 namespace local_isycredentials;
 
+defined('MOODLE_INTERNAL') || die();
+
 use moodle_exception;
 
 use local_isycredentials\signing_service_interface;
@@ -34,13 +36,53 @@ class dss_signing_service implements signing_service_interface {
     public function sign(string $document): string {
         $this->validate($document);
 
-        // Convert the document to UTF-8 and minify it.
-        $json_data = mb_convert_encoding($document, 'UTF-8', 'auto');
-        $document = json_encode(json_decode($json_data), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        // Add issuance process information
+        $document = $this->add_issuance_process_info($document);
 
+        // Start the signing process
         $data_to_sign = $this->request_data_to_sign($document);
         $signature_value = $this->certificate_manager->sign_data($data_to_sign);
         return $this->request_sign_document($signature_value);
+    }
+
+    /**
+     * Adds issuance process information to the document.
+     *
+     * @param string $document The document to add the information to.
+     * @return string The updated document.
+     */
+    private function add_issuance_process_info(string $document): string {
+        // Convert the document to UTF-8 and minify it.
+        $document = mb_convert_encoding($document, 'UTF-8', 'auto');
+        $document_data = json_decode($document, true);
+
+        $current_time = gmdate('Y-m-d\TH:i:s\Z');
+        $issuer_info = json_decode(get_config('local_isycredentials', 'elm_issuer_data'), true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \Exception('Error: Could not decode issuer data as valid json. Please check your configuration in Site Administration.');
+        }
+
+        // Insert new values after the key "expirationDate"
+        $new_values = [
+            'issuanceDate' => $current_time,
+            'issued' => $current_time,
+            'issuer' => $issuer_info
+        ];
+
+        $updated_document_data = [];
+        foreach ($document_data as $key => $value) {
+            $updated_document_data[$key] = $value;
+            if ($key === 'expirationDate') {
+                $updated_document_data = array_merge($updated_document_data, $new_values);
+            }
+        }
+
+        // If "expirationDate" is not found, append the new values at the end
+        if (!isset($document_data['expirationDate'])) {
+            $updated_document_data = array_merge($updated_document_data, $new_values);
+        }
+
+        return json_encode($updated_document_data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
 
     /**
