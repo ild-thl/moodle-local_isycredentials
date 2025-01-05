@@ -2,7 +2,7 @@
 
 namespace local_isycredentials\credential;
 
-use core\plugininfo\media;
+defined('MOODLE_INTERNAL') || die();
 
 class media_object extends base_entity {
     public string $type = 'MediaObject';
@@ -15,12 +15,8 @@ class media_object extends base_entity {
             "type" => "ConceptScheme"
         ],
         "prefLabel" => [
-            "de" => [
-                "base64"
-            ],
-            "en" => [
-                "base64"
-            ]
+            "de" => "base64",
+            "en" => "base64"
         ]
     ];
     public array $contentType;
@@ -31,12 +27,10 @@ class media_object extends base_entity {
             "id" => "http://publications.europa.eu/resource/authority/file-type",
             "type" => "ConceptScheme"
         ],
+        "notation" => "file-type",
         "prefLabel" => [
-            "en" => [
-                "PNG"
-            ]
-        ],
-        "notation" => "file-type"
+            "en" => "PNG"
+        ]
     ];
 
     public static array $CONTENT_TYPE_JPEG = [
@@ -46,12 +40,10 @@ class media_object extends base_entity {
             "id" => "http://publications.europa.eu/resource/authority/file-type",
             "type" => "ConceptScheme"
         ],
+        "notation" => "file-type",
         "prefLabel" => [
-            "en" => [
-                "JPEG"
-            ]
-        ],
-        "notation" => "file-type"
+            "en" => "JPEG"
+        ]
     ];
 
     public function __construct(string $content, array $contentType) {

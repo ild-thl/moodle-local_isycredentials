@@ -2,6 +2,8 @@
 
 namespace local_isycredentials\credential;
 
+defined('MOODLE_INTERNAL') || die();
+
 class legal_identifier extends base_entity {
     public string $type = 'LegalIdentifier';
     public string $notation;
@@ -21,8 +23,8 @@ class legal_identifier extends base_entity {
         $data =  [
             'id' => $this->getId(),
             'type' => $this->type,
-            'notation' => $this->notation,
             'spatial' => $this->spatial->toArray(),
+            'notation' => $this->notation,
         ];
         return $data;
     }

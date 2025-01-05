@@ -2,6 +2,8 @@
 
 namespace local_isycredentials\credential;
 
+defined('MOODLE_INTERNAL') || die();
+
 class learning_activity extends base_entity {
     public string $type = 'LearningActivity';
     public localized_string $title;
@@ -44,9 +46,9 @@ class learning_activity extends base_entity {
             'id' => $this->getId(),
             'type' => $this->type,
             'awardedBy' => $this->awardedBy->toArray(),
+            'specifiedBy' => $this->specifiedBy->toArray(),
             'description' => $this->description->toArray(),
             'title' => $this->title->toArray(),
-            'specifiedBy' => $this->specifiedBy->toArray(),
         ];
 
         return $data;

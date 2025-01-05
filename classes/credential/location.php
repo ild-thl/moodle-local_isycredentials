@@ -2,6 +2,8 @@
 
 namespace local_isycredentials\credential;
 
+defined('MOODLE_INTERNAL') || die();
+
 class location extends base_entity {
     public string $type = 'Location';
     public address $address;
@@ -19,7 +21,7 @@ class location extends base_entity {
         return [
             'id' => $this->getId(),
             'type' => $this->type,
-            'address' => [$this->address->toArray()],
+            'address' => $this->address->toArray(),
         ];
     }
 }

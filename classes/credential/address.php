@@ -2,6 +2,8 @@
 
 namespace local_isycredentials\credential;
 
+defined('MOODLE_INTERNAL') || die();
+
 class address extends base_entity {
     public string $type = 'Address';
     public concept $countryCode;

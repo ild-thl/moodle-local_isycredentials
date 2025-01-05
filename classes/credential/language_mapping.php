@@ -2,6 +2,8 @@
 
 namespace local_isycredentials\credential;
 
+defined('MOODLE_INTERNAL') || die();
+
 enum language_mapping_key: string {
     case ISO6392T = 'Iso6392t';
     case LITERALS = 'literals';

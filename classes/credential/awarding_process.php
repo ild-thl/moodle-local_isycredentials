@@ -2,11 +2,13 @@
 
 namespace local_isycredentials\credential;
 
+defined('MOODLE_INTERNAL') || die();
+
 class awarding_process extends base_entity {
     public string $type = 'AwardingProcess';
-    public array $awardingBody;
+    public awarding_body $awardingBody;
 
-    public function __construct(string $id, array $awardingBody) {
+    public function __construct(string $id, awarding_body $awardingBody) {
         parent::__construct($id);
         $this->awardingBody = $awardingBody;
     }
@@ -19,9 +21,7 @@ class awarding_process extends base_entity {
         return [
             'id' => $this->getId(),
             'type' => $this->type,
-            'awardingBody' => array_map(function (awarding_body $awarding_body) {
-                return $awarding_body->toArray();
-            }, $this->awardingBody),
+            'awardingBody' => $this->awardingBody->toArray(),
         ];
     }
 }

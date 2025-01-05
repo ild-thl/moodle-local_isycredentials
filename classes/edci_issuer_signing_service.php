@@ -2,6 +2,8 @@
 
 namespace local_isycredentials;
 
+defined('MOODLE_INTERNAL') || die();
+
 use local_isycredentials\signing_service_interface;
 
 class edci_issuer_signing_service implements signing_service_interface {

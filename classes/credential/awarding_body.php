@@ -2,6 +2,8 @@
 
 namespace local_isycredentials\credential;
 
+defined('MOODLE_INTERNAL') || die();
+
 class awarding_body extends organisation {
     public legal_identifier $registration;
 
@@ -13,7 +15,6 @@ class awarding_body extends organisation {
     public function toArray(): array {
         $data = parent::toArray();
         $data['registration'] = $this->registration->toArray();
-
         return $data;
     }
 }

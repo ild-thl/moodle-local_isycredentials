@@ -2,6 +2,8 @@
 
 namespace local_isycredentials\credential;
 
+defined('MOODLE_INTERNAL') || die();
+
 abstract class organisation extends base_entity {
     public string $type = 'Organisation';
     public location $location;
@@ -26,7 +28,7 @@ abstract class organisation extends base_entity {
         $data = [
             'id' => $this->getId(),
             'type' => $this->type,
-            'location' => [$this->location->toArray()],
+            'location' => $this->location->toArray(),
             'legalName' => $this->legalName->toArray(),
         ];
 

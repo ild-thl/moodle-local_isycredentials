@@ -2,13 +2,15 @@
 
 namespace local_isycredentials\credential;
 
+defined('MOODLE_INTERNAL') || die();
+
 class localized_string {
     private array $translations;
     private static string $primaryLanguage = 'en';
 
     public function __construct($translations) {
         if (is_string($translations)) {
-            $this->translations = [self::$primaryLanguage => [$translations]];
+            $this->translations = [self::$primaryLanguage => $translations];
         } elseif (is_array($translations)) {
             $this->translations = $translations;
         } else {
@@ -21,7 +23,7 @@ class localized_string {
     }
 
     public function getPrimaryLanguageValue(): ?string {
-        return $this->translations[self::$primaryLanguage][0] ?? null;
+        return $this->translations[self::$primaryLanguage] ?? null;
     }
 
     public function toArray(): array {

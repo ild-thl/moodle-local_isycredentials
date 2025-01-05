@@ -2,6 +2,8 @@
 
 namespace local_isycredentials\credential;
 
+defined('MOODLE_INTERNAL') || die();
+
 class credential_subject extends base_entity {
     public string $type = 'Person';
     public localized_string $givenName;
@@ -25,12 +27,12 @@ class credential_subject extends base_entity {
         return [
             'id' => $this->getId(),
             'type' => $this->type,
-            'givenName' => $this->givenName->toArray(),
-            'familyName' => $this->familyName->toArray(),
-            'fullName' => $this->fullName->toArray(),
             'hasClaim' => array_map(function (base_entity $claim) {
                 return $claim->toArray();
             }, $this->hasClaim),
+            'familyName' => $this->familyName->toArray(),
+            'fullName' => $this->fullName->toArray(),
+            'givenName' => $this->givenName->toArray(),
         ];
     }
 }

@@ -2,6 +2,8 @@
 
 namespace local_isycredentials;
 
+defined('MOODLE_INTERNAL') || die();
+
 interface signing_service_interface {
     /**
      * Signs a document.

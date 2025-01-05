@@ -2,6 +2,8 @@
 
 namespace local_isycredentials\credential;
 
+defined('MOODLE_INTERNAL') || die();
+
 class learning_activity_specification extends base_entity {
     public string $type = 'LearningActivitySpecification';
     public localized_string $title;

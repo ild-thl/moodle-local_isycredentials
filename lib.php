@@ -96,7 +96,7 @@ function local_isycredentials_create_credential_from_badge(int $badgeid, int $us
         // Create concept for country code
         $countryCodeConcept = new concept(
             'http://publications.europa.eu/resource/authority/country/DEU',
-            new localized_string(['de' => ['Deutschland'], 'en' => ['Germany']]),
+            new localized_string(['de' => 'Deutschland', 'en' => 'Germany']),
             'country',
             new concept_scheme('http://publications.europa.eu/resource/authority/country')
         ); // TODO get the real country of the issuer address
@@ -127,7 +127,7 @@ function local_isycredentials_create_credential_from_badge(int $badgeid, int $us
         // create awarding process
         $awardingProcess = new awarding_process(
             '1',
-            [$awarding_body]
+            $awarding_body
         );
 
         // Create the claims
@@ -158,7 +158,7 @@ function local_isycredentials_create_credential_from_badge(int $badgeid, int $us
         // Create Display Parameter
         $displayParameter = new display_parameter(
             '1',
-            [$languageConcept],
+            $languageConcept,
             [$individualDisplay],
             $languageConcept,
             new localized_string($badge->name),

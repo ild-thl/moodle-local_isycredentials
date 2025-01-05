@@ -2,14 +2,16 @@
 
 namespace local_isycredentials\credential;
 
+defined('MOODLE_INTERNAL') || die();
+
 class display_parameter extends base_entity {
     public string $type = 'DisplayParameter';
-    public array $language;
+    public concept $language;
     public array $individualDisplay;
     public concept $primaryLanguage;
     public localized_string $title;
 
-    public function __construct(string $id, array $language, array $individualDisplay, concept $primaryLanguage, localized_string $title) {
+    public function __construct(string $id, concept $language, array $individualDisplay, concept $primaryLanguage, localized_string $title) {
         parent::__construct($id);
         $this->language = $language;
         $this->individualDisplay = $individualDisplay;
@@ -22,16 +24,21 @@ class display_parameter extends base_entity {
     }
 
     public function toArray(): array {
+        // If there is only one individual display, do not wrap it in an array
+        if (count($this->individualDisplay) === 1) {
+            $individualDisplay = $this->individualDisplay[0]->toArray();
+        } else {
+            $individualDisplay = array_map(function (individual_display $individualDisplay) {
+                return $individualDisplay->toArray();
+            }, $this->individualDisplay);
+        }
+
         $data = [
             'id' => $this->getId(),
             'type' => $this->type,
-            'language' => array_map(function (concept $concept) {
-                return $concept->toArray();
-            }, $this->language),
-            'individualDisplay' => array_map(function (individual_display $individualDisplay) {
-                return $individualDisplay->toArray();
-            }, $this->individualDisplay),
+            'individualDisplay' => $individualDisplay,
             'primaryLanguage' => $this->primaryLanguage->toArray(),
+            'language' => $this->language->toArray(),
             'title' => $this->title->toArray(),
         ];
 

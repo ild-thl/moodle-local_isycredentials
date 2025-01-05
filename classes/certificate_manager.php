@@ -2,6 +2,8 @@
 
 namespace local_isycredentials;
 
+defined('MOODLE_INTERNAL') || die();
+
 use moodle_exception;
 
 class certificate_manager {

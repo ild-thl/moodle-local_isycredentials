@@ -2,6 +2,8 @@
 
 namespace local_isycredentials\credential;
 
+defined('MOODLE_INTERNAL') || die();
+
 class display_detail extends base_entity {
     public string $type = 'DisplayDetail';
     public media_object $image;
