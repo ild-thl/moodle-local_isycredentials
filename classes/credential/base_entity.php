@@ -12,5 +12,8 @@ abstract class base_entity {
     }
 
     abstract public function toArray(): array;
-    abstract public function getId(): string;
+
+    public function getId(): string {
+        return $this->id;
+    }
 }

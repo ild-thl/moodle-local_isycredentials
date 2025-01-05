@@ -7,15 +7,14 @@ class display_parameter extends base_entity {
     public array $language;
     public array $individualDisplay;
     public concept $primaryLanguage;
-    public array $title;
+    public localized_string $title;
 
-    public static function from(string $id, array $language, array $individualDisplay, concept $primaryLanguage, array $title): self {
-        $displayParameter = new display_parameter($id);
-        $displayParameter->language = $language;
-        $displayParameter->individualDisplay = $individualDisplay;
-        $displayParameter->title = $title;
-        $displayParameter->primaryLanguage = $primaryLanguage;
-        return $displayParameter;
+    public function __construct(string $id, array $language, array $individualDisplay, concept $primaryLanguage, localized_string $title) {
+        parent::__construct($id);
+        $this->language = $language;
+        $this->individualDisplay = $individualDisplay;
+        $this->title = $title;
+        $this->primaryLanguage = $primaryLanguage;
     }
 
     public function getId(): string {
@@ -33,7 +32,7 @@ class display_parameter extends base_entity {
                 return $individualDisplay->toArray();
             }, $this->individualDisplay),
             'primaryLanguage' => $this->primaryLanguage->toArray(),
-            'title' => $this->title,
+            'title' => $this->title->toArray(),
         ];
 
         return $data;

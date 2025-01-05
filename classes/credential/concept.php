@@ -7,20 +7,14 @@ defined('MOODLE_INTERNAL') || die();
 class concept extends base_entity {
     public string $type = 'Concept';
     public concept_scheme $inScheme;
-    public array $prefLabel;
+    public localized_string $prefLabel;
     public string $notation;
 
-
-    public static function from(string $id, array $prefLabel, string $notation, concept_scheme $inScheme): self {
-        $concept = new concept($id);
-        $concept->prefLabel = $prefLabel;
-        $concept->notation = $notation;
-        $concept->inScheme = $inScheme;
-        return $concept;
-    }
-
-    public function getId(): string {
-        return $this->id;
+    public function __construct(string $id, localized_string $prefLabel, string $notation, concept_scheme $inScheme) {
+        parent::__construct($id);
+        $this->prefLabel = $prefLabel;
+        $this->notation = $notation;
+        $this->inScheme = $inScheme;
     }
 
     public function toArray(): array {
@@ -29,7 +23,7 @@ class concept extends base_entity {
             'type' => $this->type,
             'inScheme' => $this->inScheme->toArray(),
             'notation' => $this->notation,
-            'prefLabel' => $this->prefLabel,
+            'prefLabel' => $this->prefLabel->toArray(),
         ];
         return $data;
     }

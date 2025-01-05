@@ -2,19 +2,20 @@
 
 namespace local_isycredentials\credential;
 
-class Organisation extends base_entity {
+abstract class organisation extends base_entity {
     public string $type = 'Organisation';
-    public array $location;
-    public array $legalName;
-    public legal_identifier $registration;
+    public location $location;
+    public localized_string $legalName;
+    public ?string $email = null;
 
-    public static function from(string $id, array $location, array $legalName, legal_identifier $registration): self {
-        $organisation = new Organisation($id);
-        $organisation->location = $location;
-        $organisation->legalName = $legalName;
-        $organisation->registration = $registration;
-
-        return $organisation;
+    public function __construct(string $id, address $address, string $legalName, ?string $email = null) {
+        parent::__construct($id);
+        $this->location = new location(
+            $id,
+            $address,
+        );
+        $this->legalName = new localized_string($legalName);
+        $this->email = $email;
     }
 
     public function getId(): string {
@@ -25,11 +26,8 @@ class Organisation extends base_entity {
         $data = [
             'id' => $this->getId(),
             'type' => $this->type,
-            'location' => array_map(function (Location $location) {
-                return $location->toArray();
-            }, $this->location),
-            'legalName' => $this->legalName,
-            'registration' => $this->registration->toArray(),
+            'location' => [$this->location->toArray()],
+            'legalName' => $this->legalName->toArray(),
         ];
 
         return $data;

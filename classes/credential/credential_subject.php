@@ -4,18 +4,17 @@ namespace local_isycredentials\credential;
 
 class credential_subject extends base_entity {
     public string $type = 'Person';
-    public array $givenName;
-    public array $familyName;
-    public array $fullName;
+    public localized_string $givenName;
+    public localized_string $familyName;
+    public localized_string $fullName;
     public array $hasClaim;
 
-    public static function from(string $id, array $givenName, array $familyName, array $hasClaim): self {
-        $person = new credential_subject($id);
-        $person->givenName = $givenName;
-        $person->familyName = $familyName;
-        $person->fullName = ['de' => [$person->givenName[array_key_first($person->givenName)][0] . ' ' . $person->familyName[array_key_first($person->familyName)][0]]];
-        $person->hasClaim = $hasClaim;
-        return $person;
+    public function __construct(string $id, string $givenName, string $familyName, string $fullName, array $hasClaim) {
+        parent::__construct($id);
+        $this->givenName = new localized_string($givenName);
+        $this->familyName = new localized_string($familyName);
+        $this->fullName = new localized_string($fullName);
+        $this->hasClaim = $hasClaim;
     }
 
     public function getId(): string {
@@ -26,9 +25,9 @@ class credential_subject extends base_entity {
         return [
             'id' => $this->getId(),
             'type' => $this->type,
-            'givenName' => $this->givenName,
-            'familyName' => $this->familyName,
-            'fullName' => $this->fullName,
+            'givenName' => $this->givenName->toArray(),
+            'familyName' => $this->familyName->toArray(),
+            'fullName' => $this->fullName->toArray(),
             'hasClaim' => array_map(function (base_entity $claim) {
                 return $claim->toArray();
             }, $this->hasClaim),

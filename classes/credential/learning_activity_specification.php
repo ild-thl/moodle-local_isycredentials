@@ -4,12 +4,11 @@ namespace local_isycredentials\credential;
 
 class learning_activity_specification extends base_entity {
     public string $type = 'LearningActivitySpecification';
-    public array $title;
+    public localized_string $title;
 
-    public static function from(string $id,  array $title): self {
-        $learningActivitySpecification = new learning_activity_specification($id);
-        $learningActivitySpecification->title = $title;
-        return $learningActivitySpecification;
+    public function __construct(string $id,  localized_string $title) {
+        parent::__construct($id);
+        $this->title = $title;
     }
     public function title(array $title): self {
         $this->title = $title;
@@ -24,7 +23,7 @@ class learning_activity_specification extends base_entity {
         return [
             'id' => $this->getId(),
             'type' => $this->type,
-            'title' => $this->title
+            'title' => $this->title->toArray()
         ];
     }
 }

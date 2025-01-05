@@ -4,12 +4,11 @@ namespace local_isycredentials\credential;
 
 class location extends base_entity {
     public string $type = 'Location';
-    public array $address;
+    public address $address;
 
-    public static function from(string $id, array $address): self {
-        $location = new location($id);
-        $location->address = $address;
-        return $location;
+    public function __construct(string $id, address $address) {
+        parent::__construct($id);
+        $this->address = $address;
     }
 
     public function getId(): string {
@@ -20,9 +19,7 @@ class location extends base_entity {
         return [
             'id' => $this->getId(),
             'type' => $this->type,
-            'address' => array_map(function (address $address) {
-                return $address->toArray();
-            }, $this->address)
+            'address' => [$this->address->toArray()],
         ];
     }
 }

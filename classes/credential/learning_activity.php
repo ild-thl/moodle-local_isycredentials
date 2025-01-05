@@ -4,32 +4,35 @@ namespace local_isycredentials\credential;
 
 class learning_activity extends base_entity {
     public string $type = 'LearningActivity';
-    public array $title;
-    public array $description;
+    public localized_string $title;
+    public localized_string $description;
     public awarding_process $awardedBy;
-    public  $specifiedBy;
+    public $specifiedBy;
 
-
-    public static function from(string $id, array $title, array $description, awarding_process $awardedBy, learning_activity_specification $specifiedBy): self {
-        $learningActivity = new learning_activity($id);
-        $learningActivity->title = $title;
-        $learningActivity->description = $description;
-        $learningActivity->awardedBy = $awardedBy;
-        $learningActivity->specifiedBy = $specifiedBy;
-
-        return $learningActivity;
+    public function __construct(string $id, localized_string $title, localized_string $description, awarding_process $awardedBy, learning_activity_specification $specifiedBy) {
+        parent::__construct($id);
+        $this->title = $title;
+        $this->description = $description;
+        $this->awardedBy = $awardedBy;
+        $this->specifiedBy = $specifiedBy;
     }
 
     public static function fromCourse(string $id, array $course, awarding_process $awardedBy): self {
-        $learningActivity = new learning_activity($id);
-        $learningActivity->title = ['de' => [$course['fullname']]];
-        $learningActivity->description = ['de' => [$course['summary']]];
-        $learningActivity->awardedBy = $awardedBy;
-        $learningActivity->specifiedBy = learning_activity_specification::from(
+        $title = new localized_string($course['fullname']);
+        $description = new localized_string($course['summary']);
+        $learningActivitySpec = new learning_activity_specification(
             $id,
-            $learningActivity->title
+            $title
         );
-        return $learningActivity;
+        $awardedBy = $awardedBy; // TODO Awarding Body could also be the teacher(s) of the course.
+
+        return new self(
+            $id,
+            $title,
+            $description,
+            $awardedBy,
+            $learningActivitySpec,
+        );
     }
 
     public function getId(): string {
@@ -41,8 +44,8 @@ class learning_activity extends base_entity {
             'id' => $this->getId(),
             'type' => $this->type,
             'awardedBy' => $this->awardedBy->toArray(),
-            'description' => $this->description,
-            'title' => $this->title,
+            'description' => $this->description->toArray(),
+            'title' => $this->title->toArray(),
             'specifiedBy' => $this->specifiedBy->toArray(),
         ];
 

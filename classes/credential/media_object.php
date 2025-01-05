@@ -2,6 +2,8 @@
 
 namespace local_isycredentials\credential;
 
+use core\plugininfo\media;
+
 class media_object extends base_entity {
     public string $type = 'MediaObject';
     public string $content;
@@ -52,12 +54,12 @@ class media_object extends base_entity {
         "notation" => "file-type"
     ];
 
-    public static function from(string $content, array $contentType): self {
-        $mediaObject = new media_object();
-        $mediaObject->content = $content;
-        $mediaObject->contentType = $contentType;
-        return $mediaObject;
+    public function __construct(string $content, array $contentType) {
+        parent::__construct();
+        $this->content = $content;
+        $this->contentType = $contentType;
     }
+
     public static function fromBadgeImage(object $badge): self {
         $fs = get_file_storage();
         $imagefile = $fs->get_file(\context_system::instance()->id, 'badges', 'badgeimage', $badge->id, '/', 'f3.png');
@@ -72,10 +74,7 @@ class media_object extends base_entity {
             throw new \Exception('Unsupported image type: ' . $mime_type);
         }
 
-        $mediaObject = new media_object();
-        $mediaObject->content = $image_content;
-        $mediaObject->contentType = $content_type;
-        return $mediaObject;
+        return new self($image_content, $content_type);
     }
 
     public function getId(): string {

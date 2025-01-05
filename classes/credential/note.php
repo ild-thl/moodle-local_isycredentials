@@ -4,12 +4,11 @@ namespace local_isycredentials\credential;
 
 class note extends base_entity {
     public string $type = 'Note';
-    public array $noteLiteral;
+    public localized_string $noteLiteral;
 
-    public static function from(array $noteLiteral): self {
-        $note = new note();
-        $note->noteLiteral = $noteLiteral;
-        return $note;
+    public function __construct(localized_string $noteLiteral) {
+        parent::__construct();
+        $this->noteLiteral = $noteLiteral;
     }
 
     public function getId(): string {
@@ -20,7 +19,7 @@ class note extends base_entity {
         return [
             'id' => $this->getId(),
             'type' => $this->type,
-            'noteLiteral' => $this->noteLiteral,
+            'noteLiteral' => $this->noteLiteral->toArray(),
         ];
     }
 }

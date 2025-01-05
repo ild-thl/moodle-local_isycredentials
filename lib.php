@@ -3,18 +3,20 @@
 defined('MOODLE_INTERNAL') || die();
 
 use local_isycredentials\credential\address;
+use local_isycredentials\credential\awarding_body;
 use local_isycredentials\credential\awarding_process;
 use local_isycredentials\credential\credential;
 use local_isycredentials\credential\credential_subject;
 use local_isycredentials\credential\display_parameter;
 use local_isycredentials\credential\individual_display;
 use local_isycredentials\credential\issuer;
-use local_isycredentials\credential\location;
-use local_isycredentials\credential\organisation;
 use local_isycredentials\credential\legal_identifier;
 use local_isycredentials\credential\learning_activity;
 use local_isycredentials\credential\concept;
 use local_isycredentials\credential\concept_scheme;
+use local_isycredentials\credential\localized_string;
+use local_isycredentials\credential\LanguageMapping;
+use local_isycredentials\credential\LanguageMappingKey;
 use local_isycredentials\dss_signing_service;
 use local_isycredentials\edci_issuer_signing_service;
 
@@ -70,94 +72,107 @@ function local_isycredentials_create_credential_from_badge(int $badgeid, int $us
         $badge_issued = $DB->get_record('badge_issued', ['badgeid' => $badgeid, 'userid' => $userid], '*', MUST_EXIST);
 
         // Fetch User data
-        $user = $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
+        $user = \core_user::get_user($userid);
+
+        if (!$user) {
+            throw new Exception('User not found.');
+        }
+
+        // Set the primary language
+        localized_string::setPrimaryLanguage($badge->language);
+
+        // Get the mapped language data
+        $iso6392tLanguage = LanguageMapping::getMappedData($badge->language, LanguageMappingKey::ISO6392T);
+        $languageLiterals = LanguageMapping::getMappedData($badge->language, LanguageMappingKey::LITERALS);
 
         // Create language concept
-        $languageConcept = concept::from(
-            'http://publications.europa.eu/resource/authority/language/DEU',
-            ['de' => ['Deutsch']],
+        $languageConcept = new concept(
+            "http://publications.europa.eu/resource/authority/language/{$iso6392tLanguage}",
+            new localized_string($languageLiterals),
             'language',
             new concept_scheme('http://publications.europa.eu/resource/authority/language')
-        ); // TODO get the real language from the badge
+        );
 
         // Create concept for country code
-        $countryCodeConcept = concept::from(
+        $countryCodeConcept = new concept(
             'http://publications.europa.eu/resource/authority/country/DEU',
-            ['de' => ['Deutschland']],
+            new localized_string(['de' => ['Deutschland'], 'en' => ['Germany']]),
             'country',
             new concept_scheme('http://publications.europa.eu/resource/authority/country')
         ); // TODO get the real country of the issuer address
 
         // Create address
-        $address = address::from(
+        $address = new address(
             '1',
             $countryCodeConcept,
-            ['de' => ["Goseriede 9, 30159 Hannover"]],
-        );
-        // Create location
-        $location = location::from(
-            '1',
-            [$address],
+            'Goseriede 9, 30159 Hannover',
         );
 
         //Create legal identifier
-        $legalIdentifier = legal_identifier::from(
+        $legalIdentifier = new legal_identifier(
             '1',
             'DUMMY-LEGAL-IDENTIFIER', ## TODO get a real legal identifier
             $countryCodeConcept
         );
-        // create organisation
-        $organisation = Organisation::from(
+
+        // create awarding body
+        $awarding_body = new awarding_body(
             '1',
-            [$location],
-            ['de' => ['OrgLegalName']], // TODO get the issuer name from the badge
+            $address,
+            'OrgLegalName', // TODO get the issuer name from the badge
+            null,
             $legalIdentifier
         );
 
         // create awarding process
-        $awardingProcess = awarding_process::from(
+        $awardingProcess = new awarding_process(
             '1',
-            [$organisation]
+            [$awarding_body]
         );
 
-        // Create learning activity
-        // TODO (Based on the badge criteria) get the completed courses and create learning activities for each course
-        $learningActivity = learning_activity::fromCourse(
-            '1',
-            ['fullname' => 'Course Name', 'summary' => 'Course Description'],
-            $awardingProcess
-        );
+        // Create the claims
+        // TODO (Based on the badge criteria) get the completed courses and create learning activities for each course 
+        $claims =  [
+            learning_activity::fromCourse(
+                '1',
+                ['fullname' => 'Course Name', 'summary' => 'Course Description'],
+                $awardingProcess
+            )
+        ];
 
         // Create credential subject
-        $credentialSubject = credential_subject::from(
+        $credentialSubject = new credential_subject(
             '1',
-            [$badge->language => [$user->firstname]],
-            [$badge->language => [$user->lastname]],
-            [$learningActivity]
+            $user->firstname,
+            $user->lastname,
+            \core_user::get_fullname($user),
+            $claims
         );
 
-
-        //Create Individual display
-        $individualDisplay = individual_display::from(
+        //Create Individual display showing the badge image
+        $individualDisplay = new individual_display(
             $languageConcept,
             $badge,
         );
+
         // Create Display Parameter
-        $displayParameter = display_parameter::from(
+        $displayParameter = new display_parameter(
             '1',
             [$languageConcept],
             [$individualDisplay],
             $languageConcept,
-            ['de' => ['Teilnahmebescheinigung']]
-        );
-        // create issuer
-        $issuer = issuer::from(
-            'http://example.org/issuer565049',
-            [$location],
-            ['de' => $badge->issuername]
+            new localized_string($badge->name),
         );
 
-        $credential = credential::from(
+        // create issuer
+        $issuer = new issuer(
+            $badge->issuerurl,
+            $address,
+            $badge->issuername,
+            $badge->issuercontact,
+        );
+
+        $credential = new credential(
             $credentialSubject,
             $issuer,
             $displayParameter,

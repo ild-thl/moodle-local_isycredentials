@@ -7,11 +7,10 @@ class display_detail extends base_entity {
     public media_object $image;
     public int $page;
 
-    public static function from(int $page, media_object $image): self {
-        $displayDetail = new display_detail();
-        $displayDetail->page = $page;
-        $displayDetail->image = $image;
-        return $displayDetail;
+    public function __construct(int $page, media_object $image) {
+        parent::__construct();
+        $this->page = $page;
+        $this->image = $image;
     }
 
     public function getId(): string {

@@ -6,10 +6,9 @@ class awarding_process extends base_entity {
     public string $type = 'AwardingProcess';
     public array $awardingBody;
 
-    public static function from(string $id, array $awardingBody): self {
-        $awardingProcess = new awarding_process($id);
-        $awardingProcess->awardingBody = $awardingBody;
-        return $awardingProcess;
+    public function __construct(string $id, array $awardingBody) {
+        parent::__construct($id);
+        $this->awardingBody = $awardingBody;
     }
 
     public function getId(): string {
@@ -20,8 +19,8 @@ class awarding_process extends base_entity {
         return [
             'id' => $this->getId(),
             'type' => $this->type,
-            'awardingBody' => array_map(function (Organisation $organisation) {
-                return $organisation->toArray();
+            'awardingBody' => array_map(function (awarding_body $awarding_body) {
+                return $awarding_body->toArray();
             }, $this->awardingBody),
         ];
     }

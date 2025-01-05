@@ -7,17 +7,16 @@ class individual_display extends base_entity {
     public concept $language;
     public array $displayDetail;
 
-    public static function from(concept $language, object $badge): self {
-        $individualDisplay = new individual_display();
-        $individualDisplay->language = $language;
+    public function __construct(concept $language, object $badge) {
+        parent::__construct();
+        $this->language = $language;
         //Create Display Details
-        $individualDisplay->displayDetail = [
-            display_detail::from(
+        $this->displayDetail = [
+            new display_detail(
                 1,
                 media_object::fromBadgeImage($badge),
             )
         ];
-        return $individualDisplay;
     }
 
     public function getId(): string {

@@ -38,22 +38,16 @@ class credential extends base_entity {
     public ?string $expirationDate = null;
     public ?string $validUntil = null;
 
-    public static function from(credential_subject $credentialSubject, issuer $issuer, display_parameter $displayParameter, string $issuanceDate, string $issued, string $validFrom, ?string $expirationDate, ?string $validUntil): self {
-        $credential = new credential();
-        $credential->expirationDate = $expirationDate;
-        $credential->issuanceDate = $issuanceDate;
-        $credential->issued = $issued;
-        $credential->validUntil = $validUntil;
-        $credential->validFrom = $validFrom;
-        $credential->credentialSubject = $credentialSubject;
-        $credential->issuer = $issuer;
-        $credential->displayParameter = $displayParameter;
-
-        return $credential;
-    }
-
-    public function getCredentialKey(): string {
-        return '';
+    public function __construct(credential_subject $credentialSubject, issuer $issuer, display_parameter $displayParameter, string $issuanceDate, string $issued, string $validFrom, ?string $expirationDate, ?string $validUntil) {
+        parent::__construct();
+        $this->expirationDate = $expirationDate;
+        $this->issuanceDate = $issuanceDate;
+        $this->issued = $issued;
+        $this->validUntil = $validUntil;
+        $this->validFrom = $validFrom;
+        $this->credentialSubject = $credentialSubject;
+        $this->issuer = $issuer;
+        $this->displayParameter = $displayParameter;
     }
 
     public function getId(): string {

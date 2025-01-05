@@ -7,11 +7,10 @@ class legal_identifier extends base_entity {
     public string $notation;
     public concept $spatial;
 
-    public static function from(string $id, string $notation, concept $spatial): self {
-        $legalIdentifier = new legal_identifier($id);
-        $legalIdentifier->notation = $notation;
-        $legalIdentifier->spatial = $spatial;
-        return $legalIdentifier;
+    public function __construct(string $id, string $notation, concept $spatial) {
+        parent::__construct($id);
+        $this->notation = $notation;
+        $this->spatial = $spatial;
     }
 
     public function getId(): string {

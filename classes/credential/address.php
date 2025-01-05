@@ -7,13 +7,12 @@ class address extends base_entity {
     public concept $countryCode;
     public note $fullAddress;
 
-    public static function from(string $id, concept $countryCode, array $fullAddress): self {
-        $address = new address($id);
-        $address->countryCode = $countryCode;
-        $address->fullAddress = note::from(
-            $fullAddress,
+    public function __construct(string $id, concept $countryCode, string $fullAddress) {
+        parent::__construct($id);
+        $this->countryCode = $countryCode;
+        $this->fullAddress = new note(
+            new localized_string($fullAddress),
         );
-        return $address;
     }
 
     public function getId(): string {
