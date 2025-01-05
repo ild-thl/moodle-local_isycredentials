@@ -88,5 +88,57 @@ if ($hassiteconfig) {
         PARAM_RAW_TRIMMED
     ));
 
+    // Add settings for awarding body's address, address country, legal identifier, legal name, and optional email
+    $settings->add(new admin_setting_configtext(
+        'local_isycredentials/awarding_body_address',
+        get_string('awarding_body_address', 'local_isycredentials'),
+        get_string('awarding_body_address_desc', 'local_isycredentials'),
+        'Musterstraße 1, 12345 Musterstadt',
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_isycredentials/awarding_body_address_country_code',
+        get_string('awarding_body_address_country_code', 'local_isycredentials'),
+        get_string('awarding_body_address_country_code_desc', 'local_isycredentials'),
+        'DEU',
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_configtextarea(
+        'local_isycredentials/awarding_body_address_country_name',
+        get_string('awarding_body_address_country_name', 'local_isycredentials'),
+        get_string('awarding_body_address_country_name_desc', 'local_isycredentials'),
+        '{
+            "de": "Deutschland",
+            "en": "Germany"
+        }',
+        PARAM_RAW_TRIMMED
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_isycredentials/awarding_body_legal_identifier',
+        get_string('awarding_body_legal_identifier', 'local_isycredentials'),
+        get_string('awarding_body_legal_identifier_desc', 'local_isycredentials'),
+        'VATSI-123456789',
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_isycredentials/awarding_body_legal_name',
+        get_string('awarding_body_legal_name', 'local_isycredentials'),
+        get_string('awarding_body_legal_name_desc', 'local_isycredentials'),
+        'Beispieluniversität',
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_isycredentials/awarding_body_email',
+        get_string('awarding_body_email', 'local_isycredentials'),
+        get_string('awarding_body_email_desc', 'local_isycredentials'),
+        'beispiel@example.com',
+        PARAM_EMAIL
+    ));
+
     $ADMIN->add('localplugins', $settings);
 }

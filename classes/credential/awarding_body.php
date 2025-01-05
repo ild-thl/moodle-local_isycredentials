@@ -7,8 +7,8 @@ defined('MOODLE_INTERNAL') || die();
 class awarding_body extends organisation {
     public legal_identifier $registration;
 
-    public function __construct(string $id, address $address, string $legalName, ?string $email = null, legal_identifier $registration) {
-        parent::__construct($id, $address, $legalName, $email);
+    public function __construct(string $id, address $address, string $legalName, legal_identifier $registration, ?string $email = null, ?address $contactAddress = null) {
+        parent::__construct($id, $address, $legalName, $email, $contactAddress);
         $this->registration = $registration;
     }
 

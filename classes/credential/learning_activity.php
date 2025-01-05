@@ -19,14 +19,19 @@ class learning_activity extends base_entity {
         $this->specifiedBy = $specifiedBy;
     }
 
-    public static function fromCourse(string $id, array $course, awarding_process $awardedBy): self {
+    public static function fromCourse(string $id, array $course, awarding_body $awardedBy): self {
         $title = new localized_string($course['fullname']);
-        $description = new localized_string($course['summary']);
+        $description = new localized_string(html_to_text($course['summary']));
         $learningActivitySpec = new learning_activity_specification(
             $id,
             $title
         );
-        $awardedBy = $awardedBy; // TODO Awarding Body could also be the teacher(s) of the course.
+
+        // TODO Awarding Body could also be the teacher(s) of the course.
+        $awardedBy = new awarding_process(
+            $id,
+            $awardedBy
+        );
 
         return new self(
             $id,

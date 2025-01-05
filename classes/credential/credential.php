@@ -30,14 +30,14 @@ class credential extends base_entity {
     ];
     public credential_subject $credentialSubject;
     public display_parameter $displayParameter;
-    public issuer $issuer;
-    public string $issuanceDate;
-    public string $issued;
+    public ?issuer $issuer = null;
+    public ?string $issuanceDate = null;
+    public ?string $issued = null;
     public string $validFrom;
     public ?string $expirationDate = null;
     public ?string $validUntil = null;
 
-    public function __construct(credential_subject $credentialSubject, issuer $issuer, display_parameter $displayParameter, string $issuanceDate, string $issued, string $validFrom, ?string $expirationDate, ?string $validUntil) {
+    public function __construct(credential_subject $credentialSubject, display_parameter $displayParameter, string $validFrom, ?string $expirationDate, ?string $validUntil, ?string $issuanceDate = null,  ?string $issued = null, ?issuer $issuer = null) {
         parent::__construct();
         $this->expirationDate = $expirationDate;
         $this->issuanceDate = $issuanceDate;
@@ -62,9 +62,9 @@ class credential extends base_entity {
             'credentialSchema' =>  $this->credentialSchema,
             'credentialSubject' => $this->credentialSubject->toArray(),
             'expirationDate' => $this->expirationDate ? date('Y-m-d\TH:i:sP', $this->expirationDate) : null,
-            // 'issuanceDate' => $this->issuanceDate ? date('Y-m-d\TH:i:sP', $this->issuanceDate) : null,
-            // 'issued' => $this->issued ? date('Y-m-d\TH:i:sP', $this->issued) : null,
-            // 'issuer' => $this->issuer->toArray(), // issuance values will be added later during the issuance process
+            'issuanceDate' => $this->issuanceDate ? date('Y-m-d\TH:i:sP', $this->issuanceDate) : null,
+            'issued' => $this->issued ? date('Y-m-d\TH:i:sP', $this->issued) : null,
+            'issuer' => $this->issuer ? $this->issuer->toArray() : null,
             'validFrom' => $this->validFrom ? date('Y-m-d\TH:i:sP', $this->validFrom) : null,
             'validUntil' => $this->validUntil ? date('Y-m-d\TH:i:sP', $this->validUntil) : null,
             '@context' => $this->context,

@@ -9,7 +9,6 @@ use local_isycredentials\credential\credential;
 use local_isycredentials\credential\credential_subject;
 use local_isycredentials\credential\display_parameter;
 use local_isycredentials\credential\individual_display;
-use local_isycredentials\credential\issuer;
 use local_isycredentials\credential\legal_identifier;
 use local_isycredentials\credential\learning_activity;
 use local_isycredentials\credential\concept;
@@ -93,52 +92,70 @@ function local_isycredentials_create_credential_from_badge(int $badgeid, int $us
             new concept_scheme('http://publications.europa.eu/resource/authority/language')
         );
 
+        // Get country code and name from settings
+        $countryCode = get_config('local_isycredentials', 'awarding_body_address_country_code');
+        $countryNameJson = get_config('local_isycredentials', 'awarding_body_address_country_name');
+        $countryName = json_decode($countryNameJson, true);
+
         // Create concept for country code
         $countryCodeConcept = new concept(
-            'http://publications.europa.eu/resource/authority/country/DEU',
-            new localized_string(['de' => 'Deutschland', 'en' => 'Germany']),
+            "http://publications.europa.eu/resource/authority/country/{$countryCode}",
+            new localized_string($countryName),
             'country',
             new concept_scheme('http://publications.europa.eu/resource/authority/country')
-        ); // TODO get the real country of the issuer address
+        );
 
         // Create address
         $address = new address(
             '1',
             $countryCodeConcept,
-            'Goseriede 9, 30159 Hannover',
+            get_config('local_isycredentials', 'awarding_body_address')
         );
 
-        //Create legal identifier
+        // Create legal identifier
         $legalIdentifier = new legal_identifier(
             '1',
-            'DUMMY-LEGAL-IDENTIFIER', ## TODO get a real legal identifier
+            get_config('local_isycredentials', 'awarding_body_legal_identifier'),
             $countryCodeConcept
         );
 
-        // create awarding body
+        // Create awarding body
         $awarding_body = new awarding_body(
             '1',
             $address,
-            'OrgLegalName', // TODO get the issuer name from the badge
-            null,
-            $legalIdentifier
+            get_config('local_isycredentials', 'awarding_body_legal_name'),
+            $legalIdentifier,
+            get_config('local_isycredentials', 'awarding_body_email'),
         );
 
-        // create awarding process
-        $awardingProcess = new awarding_process(
-            '1',
-            $awarding_body
-        );
+        // Create the claims for the credential based on the badge criteria
+        // Currently only supports course completion criteria
+        // TODO Add support for other criteria types
+        $sql = "SELECT bcp.value FROM {badge_criteria} bc
+                JOIN {badge_criteria_param} bcp ON bc.id = bcp.critid
+                WHERE bc.badgeid = :badgeid AND bc.criteriatype = 5";
 
-        // Create the claims
-        // TODO (Based on the badge criteria) get the completed courses and create learning activities for each course 
-        $claims =  [
-            learning_activity::fromCourse(
-                '1',
-                ['fullname' => 'Course Name', 'summary' => 'Course Description'],
-                $awardingProcess
-            )
-        ];
+        $params = ['badgeid' => $badge->id];
+        $courseids = $DB->get_records_sql($sql, $params);
+
+        if (empty($courseids)) {
+            throw new Exception('No completed courses found for the badge.');
+        }
+
+        $courseids = array_map(function ($course) {
+            return $course->value;
+        }, $courseids);
+
+        $claims = [];
+        $claimid = 1;
+        foreach ($courseids as $courseid) {
+            $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
+            $claims[] = learning_activity::fromCourse(
+                $claimid++,
+                ['fullname' => $course->fullname, 'summary' => $course->summary],
+                $awarding_body
+            );
+        }
 
         // Create credential subject
         $credentialSubject = new credential_subject(
@@ -164,23 +181,12 @@ function local_isycredentials_create_credential_from_badge(int $badgeid, int $us
             new localized_string($badge->name),
         );
 
-        // create issuer
-        $issuer = new issuer(
-            $badge->issuerurl,
-            $address,
-            $badge->issuername,
-            $badge->issuercontact,
-        );
-
         $credential = new credential(
             $credentialSubject,
-            $issuer,
             $displayParameter,
             $badge_issued->dateissued,
-            $badge_issued->dateissued,
-            $badge_issued->dateissued,
-            $badge->expiredate,
-            $badge->expiredate,
+            $badge_issued->dateexpire,
+            $badge_issued->dateexpire,
         );
 
         if ($withDeliveryDetails) {
