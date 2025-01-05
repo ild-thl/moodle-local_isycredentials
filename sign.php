@@ -16,7 +16,7 @@ if (isset($_FILES['json_file']) && $_FILES['json_file']['error'] == 0) {
     }
 } else if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['signbadgedemo'])) {
     try {
-        $to_sign_document = local_isycredentials_create_credential_from_badge(1, 6, true);
+        $to_sign_document = local_isycredentials_create_credential_from_badge(2, 6, true);
 
         // header('Content-Type: application/json');
         // header('Charset: utf-8');

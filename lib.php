@@ -15,8 +15,8 @@ use local_isycredentials\credential\learning_activity;
 use local_isycredentials\credential\concept;
 use local_isycredentials\credential\concept_scheme;
 use local_isycredentials\credential\localized_string;
-use local_isycredentials\credential\LanguageMapping;
-use local_isycredentials\credential\LanguageMappingKey;
+use local_isycredentials\credential\language_mapping;
+use local_isycredentials\credential\language_mapping_key;
 use local_isycredentials\dss_signing_service;
 use local_isycredentials\edci_issuer_signing_service;
 
@@ -82,8 +82,8 @@ function local_isycredentials_create_credential_from_badge(int $badgeid, int $us
         localized_string::setPrimaryLanguage($badge->language);
 
         // Get the mapped language data
-        $iso6392tLanguage = LanguageMapping::getMappedData($badge->language, LanguageMappingKey::ISO6392T);
-        $languageLiterals = LanguageMapping::getMappedData($badge->language, LanguageMappingKey::LITERALS);
+        $iso6392tLanguage = language_mapping::getMappedData($badge->language, language_mapping_key::ISO6392T);
+        $languageLiterals = language_mapping::getMappedData($badge->language, language_mapping_key::LITERALS);
 
         // Create language concept
         $languageConcept = new concept(
