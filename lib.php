@@ -3,19 +3,17 @@
 defined('MOODLE_INTERNAL') || die();
 
 use local_isycredentials\credential\address;
-use local_isycredentials\credential\awarding_body;
-use local_isycredentials\credential\awarding_process;
+use local_isycredentials\credential\concept\language_concept;
+use local_isycredentials\credential\concept\country_concept;
 use local_isycredentials\credential\credential;
 use local_isycredentials\credential\credential_subject;
 use local_isycredentials\credential\display_parameter;
+use local_isycredentials\credential\email_address;
 use local_isycredentials\credential\individual_display;
 use local_isycredentials\credential\legal_identifier;
 use local_isycredentials\credential\learning_activity;
-use local_isycredentials\credential\concept;
-use local_isycredentials\credential\concept_scheme;
 use local_isycredentials\credential\localized_string;
-use local_isycredentials\credential\language_mapping;
-use local_isycredentials\credential\language_mapping_key;
+use local_isycredentials\credential\organisation;
 use local_isycredentials\dss_signing_service;
 use local_isycredentials\edci_issuer_signing_service;
 
@@ -79,18 +77,15 @@ function local_isycredentials_create_credential_from_badge(int $badgeid, int $us
 
         // Set the primary language
         localized_string::setPrimaryLanguage($badge->language);
-
-        // Get the mapped language data
-        $iso6392tLanguage = language_mapping::getMappedData($badge->language, language_mapping_key::ISO6392T);
-        $languageLiterals = language_mapping::getMappedData($badge->language, language_mapping_key::LITERALS);
+        localized_string::setLanguageRestrictions(array_unique([$badge->language, 'de', 'en']));
 
         // Create language concept
-        $languageConcept = new concept(
-            "http://publications.europa.eu/resource/authority/language/{$iso6392tLanguage}",
-            new localized_string($languageLiterals),
-            'language',
-            new concept_scheme('http://publications.europa.eu/resource/authority/language')
-        );
+        $languageConcept = language_concept::getByCode($badge->language);
+        if (!$languageConcept) {
+            debugging("Language concept not found for language code: " . $badge->language, DEBUG_DEVELOPER);
+            $languageConcept = language_concept::EN();
+            localized_string::setPrimaryLanguage('en');
+        }
 
         // Get country code and name from settings
         $countryCode = get_config('local_isycredentials', 'awarding_body_address_country_code');
@@ -98,17 +93,16 @@ function local_isycredentials_create_credential_from_badge(int $badgeid, int $us
         $countryName = json_decode($countryNameJson, true);
 
         // Create concept for country code
-        $countryCodeConcept = new concept(
+        $countryConcept = new country_concept(
             "http://publications.europa.eu/resource/authority/country/{$countryCode}",
-            new localized_string($countryName),
-            'country',
-            new concept_scheme('http://publications.europa.eu/resource/authority/country')
+            $countryName,
+            $countryCode
         );
 
         // Create address
         $address = new address(
             '1',
-            $countryCodeConcept,
+            $countryConcept,
             get_config('local_isycredentials', 'awarding_body_address')
         );
 
@@ -116,17 +110,19 @@ function local_isycredentials_create_credential_from_badge(int $badgeid, int $us
         $legalIdentifier = new legal_identifier(
             '1',
             get_config('local_isycredentials', 'awarding_body_legal_identifier'),
-            $countryCodeConcept
+            $countryConcept
         );
 
         // Create awarding body
-        $awarding_body = new awarding_body(
+        $awarding_body = new organisation(
             '1',
             $address,
             get_config('local_isycredentials', 'awarding_body_legal_name'),
             $legalIdentifier,
             get_config('local_isycredentials', 'awarding_body_email'),
         );
+        $awarding_body->withLegalIdentifier($legalIdentifier);
+        $awarding_body->withEmail(new email_address(get_config('local_isycredentials', 'awarding_body_email')));
 
         // Create the claims for the credential based on the badge criteria
         // Currently only supports course completion criteria

@@ -4,69 +4,60 @@ namespace local_isycredentials\credential;
 
 defined('MOODLE_INTERNAL') || die();
 
+use local_isycredentials\credential\concept\content_encoding_concept;
+use local_isycredentials\credential\concept\content_type_concept;
+
+/**
+ * Class media_object
+ * 
+ * A media object., A digital file.
+ * 
+ * @see https://europa.eu/europass/elm-browser/documentation/rdf/ap/edc/documentation/edc-generic-no-cv_en.html#media-object
+ */
 class media_object extends base_entity {
     public string $type = 'MediaObject';
+
+    /**
+     * The binary data., The binary data of the media object.
+     */
     public string $content;
-    public array $contentEncoding = [
-        "id" => "http://data.europa.eu/snb/encoding/6146cde7dd",
-        "type" => "Concept",
-        "inScheme" => [
-            "id" => "http://data.europa.eu/snb/encoding/25831c2",
-            "type" => "ConceptScheme"
-        ],
-        "prefLabel" => [
-            "de" => "base64",
-            "en" => "base64"
-        ]
-    ];
-    public array $contentType;
-    public static array $CONTENT_TYPE_PNG = [
-        "id" => "http://publications.europa.eu/resource/authority/file-type/PNG",
-        "type" => "Concept",
-        "inScheme" => [
-            "id" => "http://publications.europa.eu/resource/authority/file-type",
-            "type" => "ConceptScheme"
-        ],
-        "notation" => "file-type",
-        "prefLabel" => [
-            "en" => "PNG"
-        ]
-    ];
 
-    public static array $CONTENT_TYPE_JPEG = [
-        "id" => "http://publications.europa.eu/resource/authority/file-type/JPEG",
-        "type" => "Concept",
-        "inScheme" => [
-            "id" => "http://publications.europa.eu/resource/authority/file-type",
-            "type" => "ConceptScheme"
-        ],
-        "notation" => "file-type",
-        "prefLabel" => [
-            "en" => "JPEG"
-        ]
-    ];
+    /**
+     * The encoding used to encode the binary data. The provided value should come from the Encoding type list (http://publications.europa.eu/resource/dataset/encoding)., The encoding used to encode the binary data.
+     */
+    public content_encoding_concept $contentEncoding;
 
-    public function __construct(string $content, array $contentType) {
+    /**
+     * The content type of the media object. It should be provided using the Filetype Named Authority List., The type of the content of the digital file. The provided value should come from the Filetype Named Authority List (http://publications.europa.eu/resource/authority/file-type).
+     */
+    public content_type_concept $contentType;
+
+    public function __construct(string $content, content_type_concept $contentType) {
         parent::__construct();
         $this->content = $content;
         $this->contentType = $contentType;
+        $this->contentEncoding = content_encoding_concept::BASE64();
     }
 
     public static function fromBadgeImage(object $badge): self {
         $fs = get_file_storage();
         $imagefile = $fs->get_file(\context_system::instance()->id, 'badges', 'badgeimage', $badge->id, '/', 'f3.png');
-        $image_content = base64_encode($imagefile->get_content());
-        $mime_type = $imagefile->get_mimetype();
+        return self::fromStoredFile($imagefile);
+    }
+
+    public static function fromStoredFile(\stored_file $stored_file): self {
+        $content = base64_encode($stored_file->get_content());
+        $mime_type = $stored_file->get_mimetype();
 
         if ($mime_type === 'image/jpeg') {
-            $content_type = media_object::$CONTENT_TYPE_JPEG;
+            $content_type = content_type_concept::JPEG();
         } elseif ($mime_type === 'image/png') {
-            $content_type = media_object::$CONTENT_TYPE_PNG;
+            $content_type = content_type_concept::PNG();
         } else {
             throw new \Exception('Unsupported image type: ' . $mime_type);
         }
 
-        return new self($image_content, $content_type);
+        return new self($content, $content_type);
     }
 
     public function getId(): string {
@@ -77,10 +68,14 @@ class media_object extends base_entity {
         $data = [
             'id' => $this->getId(),
             'type' => $this->type,
-            'content' => $this->content,
-            'contentEncoding' => $this->contentEncoding,
-            'contentType' => $this->contentType,
         ];
+
+        $data['content'] = $this->content;
+
+        $data['contentEncoding'] = $this->contentEncoding->toArray();
+
+        $data['contentType'] = $this->contentType->toArray();
+
         return $data;
     }
 }
