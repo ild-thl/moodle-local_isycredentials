@@ -6,6 +6,16 @@ defined('MOODLE_INTERNAL') || die();
 
 use local_isycredentials\credential\concept\credential_type_concept;
 use local_isycredentials\credential\concept\concept_scheme;
+use local_isycredentials\credential\address;
+use local_isycredentials\credential\concept\language_concept;
+use local_isycredentials\credential\concept\country_concept;
+use local_isycredentials\credential\credential_subject;
+use local_isycredentials\credential\display_parameter;
+use local_isycredentials\credential\email_address;
+use local_isycredentials\credential\individual_display;
+use local_isycredentials\credential\legal_identifier;
+use local_isycredentials\credential\localized_string;
+use local_isycredentials\credential\organisation;
 
 /**
  * Class credential
@@ -106,6 +116,105 @@ class credential extends base_entity {
         $this->credentialSchema = new concept_scheme(
             'http://data.europa.eu/snb/model/ap/edc-generic-full',
             'ShaclValidator2017',
+        );
+    }
+
+    /**
+     * Create a credential from a moodle badge and a user object.
+     * 
+     * The resulting credential will use the badges awarding criteria to create suitable claims.
+     * Currently supports course completion and competency awarded criteria.
+     *
+     * @param \stdClass $badge The badges db record
+     * @param \stdClass $user The recipients user db record
+     * @return self
+     */
+    public static function fromBadge(\stdClass $badge, \stdClass $user): self {
+        global $DB;
+        $badge_issued = $DB->get_record('badge_issued', ['badgeid' => $badge->id, 'userid' => $user->id], '*', MUST_EXIST);
+
+        // Set the primary language
+        localized_string::setPrimaryLanguage($badge->language);
+        localized_string::setLanguageRestrictions(array_unique([$badge->language, 'de', 'en']));
+
+        // Create language concept
+        $languageConcept = language_concept::getByCode($badge->language);
+        if (!$languageConcept) {
+            debugging("Language concept not found for language code: " . $badge->language, DEBUG_DEVELOPER);
+            $languageConcept = language_concept::EN();
+            localized_string::setPrimaryLanguage('en');
+        }
+
+        // Get country code and name from settings
+        $countryCode = get_config('local_isycredentials', 'awarding_body_address_country_code');
+        $countryNameJson = get_config('local_isycredentials', 'awarding_body_address_country_name');
+        $countryName = json_decode($countryNameJson, true);
+
+        // Create concept for country code
+        $countryConcept = new country_concept(
+            "http://publications.europa.eu/resource/authority/country/{$countryCode}",
+            $countryName,
+            $countryCode
+        );
+
+        // Create address
+        $address = new address(
+            '1',
+            $countryConcept,
+            get_config('local_isycredentials', 'awarding_body_address')
+        );
+
+        // Create legal identifier
+        $legalIdentifier = new legal_identifier(
+            '1',
+            get_config('local_isycredentials', 'awarding_body_legal_identifier'),
+            $countryConcept
+        );
+
+        // Create awarding body
+        $awarding_body = new organisation(
+            '1',
+            $address,
+            get_config('local_isycredentials', 'awarding_body_legal_name'),
+            $legalIdentifier,
+            get_config('local_isycredentials', 'awarding_body_email'),
+        );
+        $awarding_body->withLegalIdentifier($legalIdentifier)
+            ->withEmail(new email_address(get_config('local_isycredentials', 'awarding_body_email')));
+
+        $claims[] = learning_achievement::fromBadge($badge, $awarding_body);
+
+        // Create credential subject
+        $credentialSubject = new credential_subject(
+            '1',
+            $user->firstname,
+            $user->lastname,
+            \core_user::get_fullname($user),
+            $claims
+        );
+
+        //Create Individual display showing the badge image
+        $individualDisplay = new individual_display(
+            $languageConcept,
+            $badge,
+        );
+
+        // Create Display Parameter
+        $displayParameter = new display_parameter(
+            '1',
+            $languageConcept,
+            [$individualDisplay],
+            $languageConcept,
+            new localized_string($badge->name),
+        );
+
+
+        return new self(
+            $credentialSubject,
+            $displayParameter,
+            $badge_issued->dateissued,
+            $badge_issued->dateexpire,
+            $badge_issued->dateexpire,
         );
     }
 

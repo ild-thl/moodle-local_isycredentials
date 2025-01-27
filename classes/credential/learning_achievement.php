@@ -16,10 +16,7 @@ class learning_achievement extends base_entity {
 
     public string $type = 'LearningAchievement';
 
-    /**
-     * The awarding details of this claim., The awarding details of the set of statements made about an Agent in the context of learning and / or employment.
-     */
-    public awarding_process $awardedBy;
+    // TODO: Implement decription. Currently the description has to be set in the learning_achievement_specification or qualification class.
 
     /**
      * The title of the learning achievement.
@@ -27,37 +24,16 @@ class learning_achievement extends base_entity {
     public localized_string $title;
 
     /**
-     * Activities which contributed to (influenced) the acquisition of the learning outcomes that make up the achievement., Activities which contributed to the acquisition of the learning outcomes which make up the achievement.
-     * 
-     * @var learning_activity[]
+     * The awarding details of this claim., The awarding details of the set of statements made about an Agent in the context of learning and / or employment.
      */
-    public array $influencedBy;
+    public awarding_process $awardedBy;
 
     /**
-     * An assessment which proves the acquisition of the learning outcomes which make up the achievement.
-     * 
-     * @var learning_assessment[]
+     * The measure demonstrating the estimated workload an individual is typically required to undertake to achieve a set of learning outcomes received for the acquisition of a set of knowledge and/or skills used with responsibility and autonomy., The credit points received for this learning achievement.
+     *
+     * @var credit_point|null
      */
-    public array $provenBy;
-
-    /**
-     * The Learning Achievement Specification that specifies the Learning Achievement., The specification of a learning process, e.g., the learning achievement is specified by a learning achievement specification. ranges and domains are restricted on application profile level
-     */
-    public qualification|learning_achievement_specification $specifiedBy;
-
-    /**
-     * Smaller units of achievement, which when combined make up this achievement., An association property, that defines a part/whole relationship between instances of the same class. A related resource that is included either physically or logically in the described resource.
-     * 
-     * @var learning_achievement[]|null
-     */
-    public ?array $hasPart = null;
-
-    /**
-     * A learning achievement, which this learning achievement is part of., An association property, that defines a part/whole relationship between instances of the same class. A related resource in which the described resource is physically or logically included.
-     * 
-     * @var learning_achievement[]|null
-     */
-    public ?array $isPartOf = null;
+    public ?credit_point $creditReceived = null;
 
     /**
      * Entitlements the owner has received as a result of this achievement.
@@ -67,19 +43,152 @@ class learning_achievement extends base_entity {
     public ?array $entitlesTo = null;
 
     /**
-     * The measure demonstrating the estimated workload an individual is typically required to undertake to achieve a set of learning outcomes received for the acquisition of a set of knowledge and/or skills used with responsibility and autonomy., The credit points received for this learning achievement.
-     *
-     * @var credit_point|null
+     * Smaller units of achievement, which when combined make up this achievement., An association property, that defines a part/whole relationship between instances of the same class. A related resource that is included either physically or logically in the described resource.
+     * 
+     * @var learning_achievement[]|null
      */
-    public ?credit_point $creditReceived = null;
+    public ?array $hasPart = null;
 
-    public function __construct(string $id, awarding_process $awardedBy, localized_string $title, array $influencedBy, array $provenBy, qualification $specifiedBy) {
+    /**
+     * Links a resource to an adms:Identifier class.
+     * 
+     * @var identifier[]|legal_identifier[]|null
+     */
+    public ?array $identifier = null;
+
+    /**
+     * Activities which contributed to (influenced) the acquisition of the learning outcomes that make up the achievement., Activities which contributed to the acquisition of the learning outcomes which make up the achievement.
+     * 
+     * @var learning_activity[]|null
+     */
+    public ?array $influencedBy = null;
+
+    /**
+     * A learning achievement, which this learning achievement is part of., An association property, that defines a part/whole relationship between instances of the same class. A related resource in which the described resource is physically or logically included.
+     * 
+     * @var learning_achievement[]|null
+     */
+    public ?array $isPartOf = null;
+
+    // TODO: Implement learningOpportunity. Currently I see no reason to specify opportunities in the context of a learning credential.
+
+    /**
+     * An assessment which proves the acquisition of the learning outcomes which make up the achievement.
+     * 
+     * @var learning_assessment[]|null
+     */
+    public ?array $provenBy = null;
+
+    /**
+     * The Learning Achievement Specification that specifies the Learning Achievement., The specification of a learning process, e.g., the learning achievement is specified by a learning achievement specification. ranges and domains are restricted on application profile level
+     * Can be a qualification or a learning achievement specification.
+     * @TODO: Validate the following explanation of the different use cases of qualifications and learning achievement specifications. 
+     * A qualification should be used if a competent authority determines that an individual has achieved learning outcomes to a given standard. A learning achievement specification should be used if the learning outcomes did not follow a given standard.
+     * An example of a qualification are learning outcomes required by a diploma, a certificate, a degree, a badge, etc. An example of a learning achievement specification are learning outcomes acquired through other less standardised learning processes, such as individualised training courses, workshops, personal learning experiences, etc.
+     */
+    public qualification|learning_achievement_specification $specifiedBy;
+
+    public function __construct(?string $id, localized_string $title, awarding_process $awardedBy, qualification|learning_achievement_specification $specifiedBy) {
         parent::__construct($id);
         $this->awardedBy = $awardedBy;
         $this->title = $title;
-        $this->influencedBy = $influencedBy;
-        $this->provenBy = $provenBy;
         $this->specifiedBy = $specifiedBy;
+    }
+
+    public static function fromBadge(\stdClass $badge, organisation|person $awarding_body): self {
+        global $DB;
+
+        $title = new localized_string($badge->name);
+        $qualification = new qualification(null, $title);
+        $awardingProcess = new awarding_process(null, $awarding_body);
+        $achievement = new self(null, $title, $awardingProcess, $qualification);
+
+        // Create the achievement claim for the credential based on the badge criteria
+        // Currently  supports course completion and competency awarded criteria
+        // TODO Add support for other criteria types
+        $sql = "SELECT bcp.value, bc.criteriatype FROM {badge_criteria} bc
+                JOIN {badge_criteria_param} bcp ON bc.id = bcp.critid
+                WHERE bc.badgeid = :badgeid";
+
+        $params = ['badgeid' => $badge->id];
+        $criteriatargets = $DB->get_records_sql($sql, $params);
+
+        if (empty($criteriatargets)) {
+            throw new \Exception('No completed courses or competencies found for the badge.');
+        }
+
+        // Filter criteriatargets by type
+        $courseids = [];
+        foreach ($criteriatargets as $criteriatarget) {
+            if ($criteriatarget->criteriatype == 5) {
+                $courseids[] = $criteriatarget->value;
+            }
+        }
+
+        if (!empty($courseids)) {
+            $influencedBy = [];
+            $courserecords = $DB->get_records_list('course', 'id', $courseids);
+            foreach ($courserecords as $course) {
+                $influencedBy[] = learning_activity::fromCourse(
+                    count($influencedBy) + 1,
+                    $course,
+                    $awarding_body
+                );
+            }
+            $achievement->withInfluencedBy($influencedBy);
+        }
+
+        // // Filter criteriatargets by type
+        $compids = [];
+        foreach ($criteriatargets as $criteriatarget) {
+            if ($criteriatarget->criteriatype == 9) {
+                $compids[] = $criteriatarget->value;
+            }
+        }
+
+        if (!empty($courseids)) {
+            // Also get course competencies from competency_coursecomp table
+            $coursecompsqlresult = $DB->get_records_list('competency_coursecomp', 'courseid', $courseids);
+            foreach ($coursecompsqlresult as $coursecomp) {
+                $compids[] = $coursecomp->competencyid;
+            }
+        }
+
+        if (!empty($compids)) {
+            $outcomes = [];
+            $competencies = $DB->get_records_list('competency', 'id', $compids);
+            foreach ($competencies as $competency) {
+                $outcomes[] = learning_outcome::fromMoodleCompetency($competency);
+            }
+
+            $qualification->withLearningOutcomes($outcomes);
+        }
+
+        // TODO: also use badge alignment somehow. Find out what the use case is for this.
+
+        return $achievement;
+    }
+
+    public function withInfluencedBy(array $influencedBy): self {
+        // Check if the array contains only learning_activity objects
+        foreach ($influencedBy as $activity) {
+            if (!($activity instanceof learning_activity)) {
+                throw new \InvalidArgumentException('The influencedBy array must contain only learning_activity objects');
+            }
+        }
+        $this->influencedBy = $influencedBy;
+        return $this;
+    }
+
+    public function withProvenBy(array $provenBy): self {
+        // Check if the array contains only learning_assessment objects
+        foreach ($provenBy as $assessment) {
+            if (!($assessment instanceof learning_assessment)) {
+                throw new \InvalidArgumentException('The provenBy array must contain only learning_assessment objects');
+            }
+        }
+        $this->provenBy = $provenBy;
+        return $this;
     }
 
     public function withHasPart(array $hasPart): self {
@@ -120,6 +229,17 @@ class learning_achievement extends base_entity {
         return $this;
     }
 
+    public function withIdentifier(array $identifier): self {
+        // Check if the array contains only identifier objects
+        foreach ($identifier as $id) {
+            if (!($id instanceof identifier || $id instanceof legal_identifier)) {
+                throw new \InvalidArgumentException('The identifier array must contain only identifier or legal_identifier objects');
+            }
+        }
+        $this->identifier = $identifier;
+        return $this;
+    }
+
     public function getId(): string {
         return 'urn:epass:learningAchievement:' . $this->id;
     }
@@ -134,17 +254,25 @@ class learning_achievement extends base_entity {
 
         $data['title'] = $this->title->toArray();
 
+        if ($this->identifier) {
+            $data['identifier'] = $this->identifier;
+        }
+
         if ($this->creditReceived) {
             $data['creditReceived'] = $this->creditReceived->toArray();
         }
 
-        $data['influencedBy'] = array_map(function (learning_activity $activity) {
-            return $activity->toArray();
-        }, $this->influencedBy);
+        if (!empty($this->influencedBy)) {
+            $data['influencedBy'] = array_map(function (learning_activity $activity) {
+                return $activity->toArray();
+            }, $this->influencedBy);
+        }
 
-        $data['provenBy'] = array_map(function (learning_assessment $assessment) {
-            return $assessment->toArray();
-        }, $this->provenBy);
+        if (!empty($this->provenBy)) {
+            $data['provenBy'] = array_map(function (learning_assessment $assessment) {
+                return $assessment->toArray();
+            }, $this->provenBy);
+        }
 
         $data['specifiedBy'] = $this->specifiedBy->toArray();
 

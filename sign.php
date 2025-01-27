@@ -8,24 +8,16 @@ if (isset($_FILES['json_file']) && $_FILES['json_file']['error'] == 0) {
     $file_data = file_get_contents($_FILES['json_file']['tmp_name']);
     $service_type = optional_param('service_type', 'edci', PARAM_ALPHA);
 
-    try {
-        $signed_document = local_isycredentials_sign_document($file_data, $service_type);
-        local_isycredentials_display_signed_document($signed_document);
-    } catch (Exception $e) {
-        echo $OUTPUT->notification($e->getMessage(), 'error');
-    }
+    $signed_document = local_isycredentials_sign_document($file_data, $service_type);
+    local_isycredentials_display_signed_document($signed_document);
 } else if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['signbadgedemo'])) {
-    try {
-        $to_sign_document = local_isycredentials_create_credential_from_badge(2, 6, true);
+    $to_sign_document = local_isycredentials_create_credential_from_badge(1, 6, true);
 
-        // header('Content-Type: application/json');
-        // header('Charset: utf-8');
-        // echo $to_sign_document;
-        $signed_document = local_isycredentials_sign_document($to_sign_document, 'edci');
-        local_isycredentials_display_signed_document($signed_document);
-    } catch (Exception $e) {
-        echo $OUTPUT->notification($e->getMessage(), 'error');
-    }
+    // header('Content-Type: application/json');
+    // header('Charset: utf-8');
+    // echo $to_sign_document;
+    $signed_document = local_isycredentials_sign_document($to_sign_document, 'edci');
+    local_isycredentials_display_signed_document($signed_document);
 } else if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['download']) && isset($_POST['signed_document'])) {
     // Trigger download of the signed document
     header('Content-Type: application/json');

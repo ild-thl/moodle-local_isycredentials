@@ -56,7 +56,7 @@ class learning_entitlement extends base_entity {
     /**
      * The specification of the learning entitlement.
      */
-    public ?entitlement_specification $specifiedBy = null;
+    public ?learning_entitlement_specification $specifiedBy = null;
 
     public function __construct(string $id, localized_string $title, awarding_process $awardedBy) {
         parent::__construct($id);
@@ -90,7 +90,7 @@ class learning_entitlement extends base_entity {
         return $this;
     }
 
-    public function withSpecifiedBy(entitlement_specification $specifiedBy): self {
+    public function withSpecifiedBy(learning_entitlement_specification $specifiedBy): self {
         $this->specifiedBy = $specifiedBy;
         return $this;
     }

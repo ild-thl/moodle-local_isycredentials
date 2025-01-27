@@ -24,7 +24,7 @@ class learning_activity extends base_entity {
     /**
      * A description of the learning activity.
      */
-    public localized_string $description;
+    public ?localized_string $description = null;
 
     /**
      * The awarding details of this claim., The awarding details of the set of statements made about an Agent in the context of learning and / or employment.
@@ -34,7 +34,7 @@ class learning_activity extends base_entity {
     /**
      * The Learning Achievement Specification that specifies the Learning Achievement., The specification of a learning process, e.g., the learning achievement is specified by a learning achievement specification. ranges and domains are restricted on application profile level
      */
-    public learning_activity_specification $specifiedBy;
+    public ?learning_activity_specification $specifiedBy = null;
 
     /**
      * An association property, that defines a part/whole relationship between instances of the same class. A related resource that is included either physically or logically in the described resource., Smaller units of achievement, which when combined make up this achievement.
@@ -89,17 +89,14 @@ class learning_activity extends base_entity {
      */
     public ?array $influences = null;
 
-    public function __construct(string $id, localized_string $title, localized_string $description, awarding_process $awardedBy, learning_activity_specification $specifiedBy) {
+    public function __construct(string $id, localized_string $title, awarding_process $awardedBy) {
         parent::__construct($id);
         $this->title = $title;
-        $this->description = $description;
         $this->awardedBy = $awardedBy;
-        $this->specifiedBy = $specifiedBy;
     }
 
-    public static function fromCourse(string $id, array $course, organisation|person $awardedBy): self {
-        $title = new localized_string($course['fullname']);
-        $description = new localized_string(html_to_text($course['summary']));
+    public static function fromCourse(string $id, \stdClass $course, organisation|person $awardedBy): self {
+        $title = new localized_string($course->fullname);
         $learningActivitySpec = new learning_activity_specification(
             $id,
             $title
@@ -111,13 +108,28 @@ class learning_activity extends base_entity {
             $awardedBy
         );
 
-        return new self(
+        $activity = new self(
             $id,
             $title,
-            $description,
-            $awardedBy,
-            $learningActivitySpec,
+            $awardedBy
         );
+        $activity->withSpecifiedBy($learningActivitySpec);
+
+        if (!empty($course->summary)) {
+            $activity->withDescription(new localized_string(html_to_text($course->summary)));
+        }
+
+        return $activity;
+    }
+
+    public function withDescription(localized_string $description): self {
+        $this->description = $description;
+        return $this;
+    }
+
+    public function withSpecifiedBy(learning_activity_specification $specifiedBy): self {
+        $this->specifiedBy = $specifiedBy;
+        return $this;
     }
 
     public function withDirectedBy(array $directedBy): self {
@@ -244,9 +256,13 @@ class learning_activity extends base_entity {
 
         $data['awardedBy'] = $this->awardedBy->toArray();
 
-        $data['specifiedBy'] = $this->specifiedBy->toArray();
+        if ($this->specifiedBy) {
+            $data['specifiedBy'] = $this->specifiedBy->toArray();
+        }
 
-        $data['description'] = $this->description->toArray();
+        if ($this->description) {
+            $data['description'] = $this->description->toArray();
+        }
 
         $data['title'] = $this->title->toArray();
 
@@ -266,6 +282,10 @@ class learning_activity extends base_entity {
             $data['influences'] = array_map(function (learning_achievement $achievement) {
                 return $achievement->toArray();
             }, $this->influences);
+        }
+
+        if ($this->temporal) {
+            $data['temporal'] = $this->temporal->toArray();
         }
 
         return $data;

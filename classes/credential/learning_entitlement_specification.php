@@ -14,7 +14,7 @@ use local_isycredentials\credential\concept\occupation_concept;
  * 
  * @see https://europa.eu/europass/elm-browser/documentation/rdf/ap/edc/documentation/edc-generic-no-cv_en.html#learning-entitlement-specification
  */
-class entitlement_specification extends base_entity {
+class learning_entitlement_specification extends base_entity {
     use additional_notes_trait, supplementary_documents_trait;
 
     public string $type = 'LearningEntitlementSpecification';
@@ -47,11 +47,6 @@ class entitlement_specification extends base_entity {
      * @var integer|null Unix timestamp representing the time of the last modification.
      */
     public ?int $modified = null;
-
-    /**
-     * The specification of the learning entitlement.
-     */
-    public ?entitlement_specification $specifiedBy = null;
 
     /**
      * The ESCO occupation or occupational category which the individual may access through the entitlement. If provided, the value must come from the ESCO classification's occupation pillar (http://data.europa.eu/esco/occupation)., An ESCO Occupation or Occupational class which the individual may access through the entitlement.

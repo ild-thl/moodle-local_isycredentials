@@ -69,7 +69,7 @@ abstract class concept_vocabulary extends concept {
     //     return null;
     // }
 
-    private static function fetchXmlContent($url): \SimpleXMLElement {
+    protected static function fetchXmlContent($url): \SimpleXMLElement {
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -107,7 +107,7 @@ abstract class concept_vocabulary extends concept {
         return $conceptIds;
     }
 
-    private static function fetchConceptsFromScheme(): array {
+    protected static function fetchConceptsFromScheme(): array {
         $schemeId = static::getSchemeId();
         $xml = self::fetchXmlContent($schemeId);
 
@@ -141,7 +141,7 @@ abstract class concept_vocabulary extends concept {
         return $concepts;
     }
 
-    private static function fetchConcept(string $conceptId, ?string $notation = null): self {
+    protected static function fetchConcept(string $conceptId, ?string $notation = null): self {
         $xml = self::fetchXmlContent($conceptId);
 
         $prefLabel = [];
@@ -159,17 +159,17 @@ abstract class concept_vocabulary extends concept {
         return $concept;
     }
 
-    private static function getCache(): cache {
+    protected static function getCache(): cache {
         return cache::make('local_isycredentials', 'concepts');
     }
 
-    private static function setConceptIdsCache(array $conceptIds): void {
+    protected static function setConceptIdsCache(array $conceptIds): void {
         $cache = self::getCache();
         $cacheKey = md5(static::getSchemeId() . '_ids');
         $cache->set($cacheKey, json_encode($conceptIds));
     }
 
-    private static function getCachedConceptIds(): ?array {
+    protected static function getCachedConceptIds(): ?array {
         $cache = self::getCache();
         $cacheKey = md5(static::getSchemeId() . '_ids');
         $cachedConceptIds = $cache->get($cacheKey);
@@ -181,7 +181,7 @@ abstract class concept_vocabulary extends concept {
         return json_decode($cachedConceptIds, true);
     }
 
-    private static function getCachedConcepts(string|array $conceptIds): self|array|null {
+    protected static function getCachedConcepts(string|array $conceptIds): self|array|null {
         $cache = self::getCache();
         try {
             if (is_array($conceptIds)) {
@@ -215,7 +215,7 @@ abstract class concept_vocabulary extends concept {
         return $self;
     }
 
-    private static function setConceptCache(concept $concept): void {
+    protected static function setConceptCache(concept $concept): void {
         $cache = self::getCache();
         $cacheKey = md5($concept->getId());
         $cache->set($cacheKey, json_encode($concept->toArray()));
