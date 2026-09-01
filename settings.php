@@ -35,9 +35,9 @@ if ($hassiteconfig) {
     ));
 
     $settings->add(new admin_setting_configtextarea(
-        'local_isycredentials/sign8_issuer_profiles',
-        get_string('sign8_issuer_profiles', 'local_isycredentials'),
-        get_string('sign8_issuer_profiles_desc', 'local_isycredentials'),
+        'local_isycredentials/csc_issuer_profiles',
+        get_string('csc_issuer_profiles', 'local_isycredentials'),
+        get_string('csc_issuer_profiles_desc', 'local_isycredentials'),
         '{}',
         PARAM_RAW_TRIMMED
     ));

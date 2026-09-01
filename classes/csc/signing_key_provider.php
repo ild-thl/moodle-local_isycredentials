@@ -1,10 +1,13 @@
 <?php
 
-namespace local_isycredentials;
+namespace local_isycredentials\csc;
 
 defined('MOODLE_INTERNAL') || die();
 
-class sign8_csc_signing_key_provider implements signing_key_provider_interface, timestamp_provider_interface {
+use local_isycredentials\signing_key_provider_interface;
+use local_isycredentials\timestamp_provider_interface;
+
+class signing_key_provider implements signing_key_provider_interface, timestamp_provider_interface {
     private const SHA256_OID = '2.16.840.1.101.3.4.2.1';
     private const SHA512_OID = '2.16.840.1.101.3.4.2.3';
     private const RSA_PKCS1_V15_OID = '1.2.840.113549.1.1.1';
@@ -14,10 +17,10 @@ class sign8_csc_signing_key_provider implements signing_key_provider_interface, 
     private $http_client;
     private $certificate_data;
 
-    public function __construct(array $profile, ?sign8_http_client_interface $http_client = null) {
+    public function __construct(array $profile, ?http_client_interface $http_client = null) {
         $this->validate_profile($profile);
         $this->profile = $profile;
-        $this->http_client = $http_client ?? new sign8_curl_http_client();
+        $this->http_client = $http_client ?? new curl_http_client();
     }
 
     public function get_certificate_data(): ?array {
@@ -30,7 +33,7 @@ class sign8_csc_signing_key_provider implements signing_key_provider_interface, 
             $info = $this->credential_info($token);
             $chain = $info['cert']['certificates'] ?? $info['certificates'] ?? [];
             if (empty($chain) || !is_string($chain[0])) {
-                throw new \moodle_exception('sign8_missing_certificate', 'local_isycredentials');
+                throw new \moodle_exception('csc_missing_certificate', 'local_isycredentials');
             }
             $this->certificate_data = ['certificate' => $this->pem_certificate(base64_decode($chain[0], true))];
             return $this->certificate_data;
@@ -41,7 +44,7 @@ class sign8_csc_signing_key_provider implements signing_key_provider_interface, 
 
     public function sign_data(string $data_to_sign): string {
         if ($data_to_sign === '') {
-            throw new \moodle_exception('sign8_empty_data', 'local_isycredentials');
+            throw new \moodle_exception('csc_empty_data', 'local_isycredentials');
         }
 
         $hash = hash('sha256', $data_to_sign, true);
@@ -56,7 +59,7 @@ class sign8_csc_signing_key_provider implements signing_key_provider_interface, 
             ], $this->bearer_header($token));
             $request_id = $response['responseID'] ?? null;
             if (!is_string($request_id) || $request_id === '') {
-                throw new \moodle_exception('sign8_missing_request_id', 'local_isycredentials');
+                throw new \moodle_exception('csc_missing_request_id', 'local_isycredentials');
             }
             return $this->poll_signature($token, $request_id);
         } finally {
@@ -73,7 +76,7 @@ class sign8_csc_signing_key_provider implements signing_key_provider_interface, 
 
     public function get_timestamp(string $data): string {
         if ($data === '') {
-            throw new \moodle_exception('sign8_empty_data', 'local_isycredentials');
+            throw new \moodle_exception('csc_empty_data', 'local_isycredentials');
         }
 
         $hash = hash('sha512', $data, true);
@@ -85,9 +88,9 @@ class sign8_csc_signing_key_provider implements signing_key_provider_interface, 
             ], $this->bearer_header($token));
             $timestamp = $response['timeStampToken'] ?? null;
             if (!is_string($timestamp) || $timestamp === '') {
-                debugging('SIGN8 timestamp response did not contain a non-empty timeStampToken. Response structure: '
+                debugging('CSC timestamp response did not contain a non-empty timeStampToken. Response structure: '
                     . $this->response_structure($response), DEBUG_DEVELOPER);
-                throw new \moodle_exception('sign8_missing_timestamp', 'local_isycredentials');
+                    throw new \moodle_exception('csc_missing_timestamp', 'local_isycredentials');
             }
             return $timestamp;
         } finally {
@@ -114,7 +117,7 @@ class sign8_csc_signing_key_provider implements signing_key_provider_interface, 
         ], [], $this->tls_options());
 
         if (empty($response['code'])) {
-            throw new \moodle_exception('sign8_missing_authorization_code', 'local_isycredentials');
+            throw new \moodle_exception('csc_missing_authorization_code', 'local_isycredentials');
         }
         $token = $this->http_client->post_form($this->oauth_url('/oauth2/token'), [
             'grant_type' => 'authorization_code',
@@ -125,7 +128,7 @@ class sign8_csc_signing_key_provider implements signing_key_provider_interface, 
             'code_verifier' => $verifier,
         ]);
         if (empty($token['access_token'])) {
-            throw new \moodle_exception('sign8_missing_access_token', 'local_isycredentials');
+            throw new \moodle_exception('csc_missing_access_token', 'local_isycredentials');
         }
         return $token['access_token'];
     }
@@ -143,7 +146,7 @@ class sign8_csc_signing_key_provider implements signing_key_provider_interface, 
         $max_attempts = isset($this->profile['poll_max_attempts']) ? (int) $this->profile['poll_max_attempts'] : 10;
         $delay_microseconds = isset($this->profile['poll_delay_microseconds']) ? (int) $this->profile['poll_delay_microseconds'] : 2000000;
         if ($max_attempts < 1 || $delay_microseconds < 0) {
-            throw new \moodle_exception('sign8_invalid_profile', 'local_isycredentials', '', 'polling');
+            throw new \moodle_exception('csc_invalid_profile', 'local_isycredentials', '', 'polling');
         }
 
         for ($attempt = 1; $attempt <= $max_attempts; $attempt++) {
@@ -153,7 +156,7 @@ class sign8_csc_signing_key_provider implements signing_key_provider_interface, 
                 ], $this->bearer_header($token));
                 if (isset($response['signatures']) && is_array($response['signatures']) && empty($response['signatures'])) {
                     if ($attempt === $max_attempts) {
-                        throw new \moodle_exception('sign8_poll_timeout', 'local_isycredentials', '', $request_id);
+                        throw new \moodle_exception('csc_poll_timeout', 'local_isycredentials', '', $request_id);
                     }
                     if ($delay_microseconds > 0) {
                         usleep($delay_microseconds);
@@ -163,18 +166,18 @@ class sign8_csc_signing_key_provider implements signing_key_provider_interface, 
                 $signature = $response['signatures'][0] ?? null;
                 $decoded_signature = is_string($signature) ? $this->decode_signature($signature) : false;
                 if ($decoded_signature === false) {
-                    debugging('SIGN8 polling response did not contain a decodable signatures[0]. Response structure: '
+                    debugging('CSC polling response did not contain a decodable signatures[0]. Response structure: '
                         . $this->response_structure($response), DEBUG_DEVELOPER);
-                    throw new \moodle_exception('sign8_missing_signature', 'local_isycredentials');
+                    throw new \moodle_exception('csc_missing_signature', 'local_isycredentials');
                 }
                 return $decoded_signature;
-            } catch (sign8_api_exception $exception) {
+            } catch (api_exception $exception) {
                 $description = $exception->response_data['error_description'] ?? '';
                 if ($description !== 'The previous asynchronous signature request has been accepted for processing, but the processing has not yet been completed.') {
                     throw $exception;
                 }
                 if ($attempt === $max_attempts) {
-                    throw new \moodle_exception('sign8_poll_timeout', 'local_isycredentials', '', $request_id);
+                    throw new \moodle_exception('csc_poll_timeout', 'local_isycredentials', '', $request_id);
                 }
                 if ($delay_microseconds > 0) {
                     usleep($delay_microseconds);
@@ -182,7 +185,7 @@ class sign8_csc_signing_key_provider implements signing_key_provider_interface, 
             }
         }
 
-        throw new \moodle_exception('sign8_poll_timeout', 'local_isycredentials', '', $request_id);
+        throw new \moodle_exception('csc_poll_timeout', 'local_isycredentials', '', $request_id);
     }
 
     private function decode_signature(string $signature) {
@@ -224,7 +227,7 @@ class sign8_csc_signing_key_provider implements signing_key_provider_interface, 
                 'client_secret' => $this->secret('client_secret_env'),
             ], $this->bearer_header($token));
         } catch (\Throwable $exception) {
-            debugging('SIGN8 access-token revocation failed: ' . $exception->getMessage(), DEBUG_DEVELOPER);
+            debugging('CSC access-token revocation failed: ' . $exception->getMessage(), DEBUG_DEVELOPER);
         }
     }
 
@@ -251,7 +254,7 @@ class sign8_csc_signing_key_provider implements signing_key_provider_interface, 
     private function secret(string $name): string {
         $value = getenv($this->profile[$name]);
         if ($value === false || $value === '') {
-            throw new \moodle_exception('sign8_missing_secret', 'local_isycredentials', '', $this->profile[$name]);
+            throw new \moodle_exception('csc_missing_secret', 'local_isycredentials', '', $this->profile[$name]);
         }
         return $value;
     }
@@ -259,7 +262,7 @@ class sign8_csc_signing_key_provider implements signing_key_provider_interface, 
     private function validate_profile(array $profile): void {
         foreach (['credential_id', 'client_id', 'oauth2_url', 'api_url', 'redirect_uri', 'client_secret_env', 'tls_certificate_path_env', 'tls_key_path_env'] as $field) {
             if (empty($profile[$field]) || !is_string($profile[$field])) {
-                throw new \moodle_exception('sign8_invalid_profile', 'local_isycredentials', '', $field);
+                throw new \moodle_exception('csc_invalid_profile', 'local_isycredentials', '', $field);
             }
         }
     }
@@ -280,7 +283,7 @@ class sign8_csc_signing_key_provider implements signing_key_provider_interface, 
         if (is_array($details) && ($details['type'] ?? null) === OPENSSL_KEYTYPE_RSA) {
             return self::RSA_PKCS1_V15_OID;
         }
-        throw new \moodle_exception('sign8_unsupported_key_type', 'local_isycredentials');
+        throw new \moodle_exception('csc_unsupported_key_type', 'local_isycredentials');
     }
 
     private function base64url_encode(string $value): string {
@@ -293,7 +296,7 @@ class sign8_csc_signing_key_provider implements signing_key_provider_interface, 
 
     private function pem_certificate($certificate): string {
         if (!is_string($certificate) || $certificate === '') {
-            throw new \moodle_exception('sign8_missing_certificate', 'local_isycredentials');
+            throw new \moodle_exception('csc_missing_certificate', 'local_isycredentials');
         }
         return "-----BEGIN CERTIFICATE-----\n" . chunk_split(base64_encode($certificate), 64, "\n") . "-----END CERTIFICATE-----\n";
     }

@@ -6,18 +6,18 @@ use local_isycredentials\credential\credential;
 use local_isycredentials\certificate_manager;
 use local_isycredentials\dss_signing_service;
 use local_isycredentials\edci_issuer_signing_service;
-use local_isycredentials\sign8_csc_signing_key_provider;
-use local_isycredentials\sign8_profile_repository;
+use local_isycredentials\csc\signing_key_provider;
+use local_isycredentials\csc\profile_repository;
 
 /**
  * Signs a document using the configured signing service.
  *
  * @param string $document The document to sign.
- * @param string $service_type The type of signing service to use ('dss', 'edci', or 'sign8').
+ * @param string $service_type The type of signing service to use ('dss', 'edci', or 'csc').
  * @return string The signed document data.
  * @throws Exception If any error occurs during the signing process.
  */
-function local_isycredentials_sign_document(string $document, string $service_type = 'sign8'): string {
+function local_isycredentials_sign_document(string $document, string $service_type = 'csc'): string {
     if ($service_type === 'dss') {
         $certificate_password = get_config('local_isycredentials', 'certificate_password');
         if (empty($certificate_password)) {
@@ -31,9 +31,9 @@ function local_isycredentials_sign_document(string $document, string $service_ty
         }
         $certificate = reset($files)->get_content();
         $signing_service = new dss_signing_service(new certificate_manager($certificate, $certificate_password));
-    } else if ($service_type === 'sign8') {
-        $profile = sign8_profile_repository::for_document($document);
-        $signing_service = new dss_signing_service(new sign8_csc_signing_key_provider($profile));
+    } else if ($service_type === 'csc') {
+        $profile = profile_repository::for_document($document);
+        $signing_service = new dss_signing_service(new signing_key_provider($profile));
     } else if ($service_type === 'edci') {
         $certificate_password = get_config('local_isycredentials', 'certificate_password');
         if (empty($certificate_password)) {

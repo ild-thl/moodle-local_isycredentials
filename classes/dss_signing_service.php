@@ -9,14 +9,14 @@ use moodle_exception;
 use local_isycredentials\signing_service_interface;
 
 class dss_signing_service implements signing_service_interface {
-    private $certificate_manager;
+    private $signing_key_provider;
     private $signing_service_url;
     private $certificate_data;
     private $request_body_base;
 
-    public function __construct(signing_key_provider_interface $certificate_manager) {
-        $this->certificate_manager = $certificate_manager;
-        $this->certificate_data = $this->certificate_manager->get_certificate_data();
+    public function __construct(signing_key_provider_interface $signing_key_provider) {
+        $this->signing_key_provider = $signing_key_provider;
+        $this->certificate_data = $this->signing_key_provider->get_certificate_data();
         if (!$this->certificate_data) {
             throw new \Exception('Error: Could not load certificate data. Please check your certificate configuration in Site Administration.');
         }
@@ -41,7 +41,7 @@ class dss_signing_service implements signing_service_interface {
 
         // Start the signing process
         $data_to_sign = $this->request_data_to_sign($document);
-        $signature_value = $this->certificate_manager->sign_data($data_to_sign);
+        $signature_value = $this->signing_key_provider->sign_data($data_to_sign);
         return $this->request_sign_document($signature_value);
     }
 
@@ -130,9 +130,9 @@ class dss_signing_service implements signing_service_interface {
      * @throws Exception If any error occurs during the http request to the signing service.
      */
     public function request_timestamp_document($toTimpstampDocument): array {
-        if ($this->certificate_manager instanceof timestamp_provider_interface) {
+        if ($this->signing_key_provider instanceof timestamp_provider_interface) {
             return [
-                'bytes' => $this->certificate_manager->get_timestamp($toTimpstampDocument),
+                'bytes' => $this->signing_key_provider->get_timestamp($toTimpstampDocument),
                 'digestAlgorithm' => 'SHA512',
                 'timestampContainerForm' => null,
             ];
@@ -165,7 +165,7 @@ class dss_signing_service implements signing_service_interface {
         $endpoint = $this->signing_service_url . '/one-document/signDocument';
         $request_body = $this->request_body_base;
         $request_body['signatureValue'] = [
-            'algorithm' => $this->certificate_manager->get_signature_algorithm(),
+            'algorithm' => $this->signing_key_provider->get_signature_algorithm(),
             'value' => base64_encode($signatureValue),
         ];
 
@@ -185,7 +185,7 @@ class dss_signing_service implements signing_service_interface {
      * @return array|null The response array or null on failure.
      * @throws Exception If any error occurs during the http request to the signing service.
      */
-    private function call_signing_service(string $url, array $request_body): ?array {
+    protected function call_signing_service(string $url, array $request_body): ?array {
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_POST, true);

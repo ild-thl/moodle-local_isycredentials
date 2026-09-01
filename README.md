@@ -71,3 +71,31 @@ mysqldb:
         timeout: 5s
         retries: 6
 ```
+
+## Running Tests
+
+Run these commands from the Moodle root directory. This works whether Moodle
+runs directly on the host, in Docker, in Podman, or in another environment.
+The PHP CLI, Composer dependencies, and the Moodle test database must be
+available in that environment.
+
+```sh
+cd /path/to/moodle
+php admin/tool/phpunit/cli/init.php
+```
+
+Initialise the PHPUnit environment first, or repeat the initialisation when
+Moodle reports that the environment was created for a different Moodle
+version. Then run the credential plugin test cases:
+
+```sh
+php vendor/bin/phpunit local/isycredentials/tests/credential_test.php && php vendor/bin/phpunit local/isycredentials/tests/dss_signing_service_test.php && php vendor/bin/phpunit local/isycredentials/tests/csc/signing_key_provider_test.php
+```
+
+Run one test file individually when working on a specific area:
+
+```sh
+php vendor/bin/phpunit local/isycredentials/tests/credential_test.php
+php vendor/bin/phpunit local/isycredentials/tests/dss_signing_service_test.php
+php vendor/bin/phpunit local/isycredentials/tests/csc/signing_key_provider_test.php
+```

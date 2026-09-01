@@ -1,10 +1,10 @@
 <?php
 
-namespace local_isycredentials;
+namespace local_isycredentials\csc;
 
 defined('MOODLE_INTERNAL') || die();
 
-class sign8_curl_http_client implements sign8_http_client_interface {
+class curl_http_client implements http_client_interface {
     public function post_form(string $url, array $data, array $headers = [], array $tls_options = []): array {
         $headers[] = 'Content-Type: application/x-www-form-urlencoded';
         return $this->post($url, http_build_query($data, '', '&', PHP_QUERY_RFC3986), $headers, $tls_options);
@@ -17,10 +17,7 @@ class sign8_curl_http_client implements sign8_http_client_interface {
 
     private function post(string $url, string $body, array $headers, array $tls_options): array {
         $headers[] = 'User-Agent: Moodle local_isycredentials/1.0';
-        // debugging('SIGN8 request: POST ' . $url, DEBUG_DEVELOPER);
-        // debugging('SIGN8 request headers: ' . json_encode($this->debug_headers($headers)), DEBUG_DEVELOPER);
-        // debugging('SIGN8 request body: ' . $this->debug_body($body, $headers), DEBUG_DEVELOPER);
-        debugging('SIGN8 request: POST ' . $url . ' Body: ' . $this->debug_body($body, $headers), DEBUG_DEVELOPER);
+        debugging('CSC request: POST ' . $url . ' Body: ' . $this->debug_body($body, $headers), DEBUG_DEVELOPER);
 
         $curl = curl_init($url);
         curl_setopt_array($curl, [
@@ -53,8 +50,8 @@ class sign8_curl_http_client implements sign8_http_client_interface {
             if (strlen($response_body) > 2000) {
                 $response_body = substr($response_body, 0, 2000) . '...';
             }
-            debugging('SIGN8 response: HTTP ' . $http_code . ' ' . $this->debug_body($response_body), DEBUG_DEVELOPER);
-            $details = "SIGN8 request failed with HTTP {$http_code}: {$error}";
+            debugging('CSC response: HTTP ' . $http_code . ' ' . $this->debug_body($response_body), DEBUG_DEVELOPER);
+            $details = "CSC request failed with HTTP {$http_code}: {$error}";
             if ($content_type !== false && $content_type !== '') {
                 $details .= " (Content-Type: {$content_type})";
             }
@@ -62,10 +59,10 @@ class sign8_curl_http_client implements sign8_http_client_interface {
                 $details .= " Response: {$response_body}";
             }
             $response_data = json_decode($response_body, true);
-            throw new sign8_api_exception($http_code, is_array($response_data) ? $response_data : [], $details);
+            throw new api_exception($http_code, is_array($response_data) ? $response_data : [], $details);
         }
 
-        debugging('SIGN8 response: HTTP ' . $http_code . ' ' . $this->debug_body($response), DEBUG_DEVELOPER);
+        debugging('CSC response: HTTP ' . $http_code . ' ' . $this->debug_body($response), DEBUG_DEVELOPER);
 
         if ($http_code === 204 && trim($response) === '') {
             return [];
@@ -74,7 +71,7 @@ class sign8_curl_http_client implements sign8_http_client_interface {
         try {
             return json_decode($response, true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException $exception) {
-            throw new \moodle_exception('sign8_invalid_response', 'local_isycredentials', '', null, $exception->getMessage());
+            throw new \moodle_exception('csc_invalid_response', 'local_isycredentials', '', null, $exception->getMessage());
         }
     }
 
