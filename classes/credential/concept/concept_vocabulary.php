@@ -36,7 +36,7 @@ abstract class concept_vocabulary extends concept {
         }
 
         // If cache not found get all concepts
-        $allConcepts = self::fetchConceptsFromScheme($conceptId);
+        $allConcepts = self::fetchConceptsFromScheme();
         foreach ($allConcepts as $concept) {
             if ($concept->getId() === $conceptId) {
                 return $concept;
@@ -91,20 +91,68 @@ abstract class concept_vocabulary extends concept {
             throw new \Exception("Failed to parse XML content from $url");
         }
 
+        foreach ($xml->getDocNamespaces(true) as $prefix => $namespace) {
+            if ($prefix !== '') {
+                $xml->registerXPathNamespace($prefix, $namespace);
+            }
+        }
+
         return $xml;
     }
 
     protected static function extractConceptIds(\SimpleXMLElement $xml, string $schemeId): array {
         $conceptIds = [];
-        foreach ($xml->xpath('//rdf:Description') as $description) {
-            $conceptId = (string) $description->attributes('rdf', true)->about;
-            // Skip if conceptId eq schemeId
-            if ($conceptId === $schemeId) {
-                continue;
+
+        // Application-profile responses can expose the allowed value through
+        // sh:hasValue instead of returning the concept as a skos:Concept node.
+        $namespaces = $xml->getDocNamespaces(true);
+        if (isset($namespaces['sh'])) {
+            foreach ($xml->xpath('//sh:hasValue/@rdf:resource') ?: [] as $resource) {
+                $conceptId = (string) $resource;
+                if ($conceptId !== '' && $conceptId !== $schemeId) {
+                    $conceptIds[] = $conceptId;
+                }
             }
-            $conceptIds[] = $conceptId;
         }
-        return $conceptIds;
+        if (!empty($conceptIds)) {
+            return array_values(array_unique($conceptIds));
+        }
+
+        // Vocabulary responses may contain SHACL property descriptions as well
+        // as concepts. Only resources representing concepts are valid targets.
+        $conceptNodes = $xml->xpath('//skos:Concept') ?: [];
+        foreach ($conceptNodes as $conceptNode) {
+            $conceptId = (string) $conceptNode->attributes('rdf', true)->about;
+            if ($conceptId !== '' && $conceptId !== $schemeId) {
+                $conceptIds[] = $conceptId;
+            }
+        }
+
+        // Some vocabularies use rdf:Description for concepts. A prefLabel is
+        // the distinguishing property, unlike SHACL property descriptions.
+        if (empty($conceptIds)) {
+            foreach ($xml->xpath('//rdf:Description[skos:prefLabel]') ?: [] as $description) {
+                $conceptId = (string) $description->attributes('rdf', true)->about;
+                if ($conceptId !== '' && $conceptId !== $schemeId) {
+                    $conceptIds[] = $conceptId;
+                }
+            }
+        }
+
+        // The EU authority endpoint can identify concepts only by their
+        // skos:inScheme resource, without a prefLabel in the scheme response.
+        if (empty($conceptIds)) {
+            foreach ($xml->xpath('//rdf:Description[skos:inScheme]') ?: [] as $description) {
+                $conceptId = (string) $description->attributes('rdf', true)->about;
+                $inScheme = $description->children('skos', true)->inScheme;
+                $schemeResource = (string) $inScheme->attributes('rdf', true)->resource;
+                if ($conceptId !== '' && $conceptId !== $schemeId && $schemeResource === $schemeId) {
+                    $conceptIds[] = $conceptId;
+                }
+            }
+        }
+
+        return array_values(array_unique($conceptIds));
     }
 
     protected static function fetchConceptsFromScheme(): array {
@@ -113,8 +161,11 @@ abstract class concept_vocabulary extends concept {
 
         // Try to get table.id if available to use as notation
         $notation = null;
-        foreach ($xml->xpath('//rdf:Description/ns6:table.id') as $tableId) {
-            $notation = (string) $tableId;
+        $namespaces = $xml->getDocNamespaces(true);
+        if (isset($namespaces['ns6'])) {
+            foreach ($xml->xpath('//rdf:Description/ns6:table.id') ?: [] as $tableId) {
+                $notation = (string) $tableId;
+            }
         }
 
         $conceptIds = static::getWhitelist();
@@ -165,13 +216,13 @@ abstract class concept_vocabulary extends concept {
 
     protected static function setConceptIdsCache(array $conceptIds): void {
         $cache = self::getCache();
-        $cacheKey = md5(static::getSchemeId() . '_ids');
+        $cacheKey = md5(static::getSchemeId() . '_ids_v2');
         $cache->set($cacheKey, json_encode($conceptIds));
     }
 
     protected static function getCachedConceptIds(): ?array {
         $cache = self::getCache();
-        $cacheKey = md5(static::getSchemeId() . '_ids');
+        $cacheKey = md5(static::getSchemeId() . '_ids_v2');
         $cachedConceptIds = $cache->get($cacheKey);
 
         if ($cachedConceptIds === false) {

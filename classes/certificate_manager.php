@@ -6,7 +6,7 @@ defined('MOODLE_INTERNAL') || die();
 
 use moodle_exception;
 
-class certificate_manager {
+class certificate_manager implements signing_key_provider_interface {
     private $certificate;
     private $certificate_password;
     private $certificate_data;
@@ -86,5 +86,9 @@ class certificate_manager {
         }
 
         return $signature;
+    }
+
+    public function get_signature_algorithm(): string {
+        return 'RSA_SHA256';
     }
 }

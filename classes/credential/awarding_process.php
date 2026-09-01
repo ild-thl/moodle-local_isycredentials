@@ -20,8 +20,13 @@ class awarding_process extends base_entity {
      */
     public organisation|person $awardingBody;
 
-    public function __construct(?string $id = null, organisation|person $awardingBody) {
+    public function __construct(?string $id = null, organisation|person|null $awardingBody = null) {
         parent::__construct($id);
+
+        if ($awardingBody === null) {
+            throw new \InvalidArgumentException('An awarding body is required.');
+        }
+
         $this->awardingBody = $awardingBody;
     }
 

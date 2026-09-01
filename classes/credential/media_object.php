@@ -41,7 +41,11 @@ class media_object extends base_entity {
 
     public static function fromBadgeImage(object $badge): self {
         $fs = get_file_storage();
-        $imagefile = $fs->get_file(\context_system::instance()->id, 'badges', 'badgeimage', $badge->id, '/', 'f3.png');
+        $moodle_badge = new \core_badges\badge($badge->id);
+        $imagefile = $fs->get_file($moodle_badge->get_context()->id, 'badges', 'badgeimage', $badge->id, '/', 'f3.png');
+        if (!$imagefile) {
+            throw new \moodle_exception('badge_image_missing', 'local_isycredentials', '', $badge->id);
+        }
         return self::fromStoredFile($imagefile);
     }
 

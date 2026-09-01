@@ -6,17 +6,17 @@ require_capability('local/isycredentials:sign', context_system::instance());
 
 if (isset($_FILES['json_file']) && $_FILES['json_file']['error'] == 0) {
     $file_data = file_get_contents($_FILES['json_file']['tmp_name']);
-    $service_type = optional_param('service_type', 'edci', PARAM_ALPHA);
+    $service_type = optional_param('service_type', 'sign8', PARAM_ALPHA);
 
     $signed_document = local_isycredentials_sign_document($file_data, $service_type);
     local_isycredentials_display_signed_document($signed_document);
 } else if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['signbadgedemo'])) {
-    $to_sign_document = local_isycredentials_create_credential_from_badge(1, 6, true);
+    $to_sign_document = local_isycredentials_create_credential_from_badge(1, 4, true);
 
     // header('Content-Type: application/json');
     // header('Charset: utf-8');
     // echo $to_sign_document;
-    $signed_document = local_isycredentials_sign_document($to_sign_document, 'edci');
+    $signed_document = local_isycredentials_sign_document($to_sign_document, 'sign8');
     local_isycredentials_display_signed_document($signed_document);
 } else if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['download']) && isset($_POST['signed_document'])) {
     // Trigger download of the signed document
@@ -37,6 +37,7 @@ if (isset($_FILES['json_file']) && $_FILES['json_file']['error'] == 0) {
     echo '<select name="service_type">';
     echo '<option value="dss">' . get_string('dss_service', 'local_isycredentials') . '</option>';
     echo '<option value="edci">' . get_string('edci_service', 'local_isycredentials') . '</option>';
+    echo '<option value="sign8">' . get_string('sign8_service', 'local_isycredentials') . '</option>';
     echo '</select>';
     echo '<input type="submit" value="' . get_string('upload', 'local_isycredentials') . '">';
     echo '</form>';

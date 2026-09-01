@@ -14,15 +14,15 @@ class dss_signing_service implements signing_service_interface {
     private $certificate_data;
     private $request_body_base;
 
-    public function __construct($certificate, $certificate_password) {
-        $this->certificate_manager = new certificate_manager($certificate, $certificate_password);
+    public function __construct(signing_key_provider_interface $certificate_manager) {
+        $this->certificate_manager = $certificate_manager;
         $this->certificate_data = $this->certificate_manager->get_certificate_data();
         if (!$this->certificate_data) {
             throw new \Exception('Error: Could not load certificate data. Please check your certificate configuration in Site Administration.');
         }
 
         $this->signing_service_url = get_config('local_isycredentials', 'dss_signing_service_url');
-        if (empty($this->signing_service_url) || empty($certificate_password)) {
+        if (empty($this->signing_service_url)) {
             throw new \Exception('Error: Plugin settings are not set. Please set the needed values in Site Administration.');
         }
     }
@@ -130,6 +130,14 @@ class dss_signing_service implements signing_service_interface {
      * @throws Exception If any error occurs during the http request to the signing service.
      */
     public function request_timestamp_document($toTimpstampDocument): array {
+        if ($this->certificate_manager instanceof timestamp_provider_interface) {
+            return [
+                'bytes' => $this->certificate_manager->get_timestamp($toTimpstampDocument),
+                'digestAlgorithm' => 'SHA512',
+                'timestampContainerForm' => null,
+            ];
+        }
+
         $endpoint = $this->signing_service_url . '/one-document/timestampDocument';
         $request_body = [
             'timestampParameters' => [
@@ -157,7 +165,7 @@ class dss_signing_service implements signing_service_interface {
         $endpoint = $this->signing_service_url . '/one-document/signDocument';
         $request_body = $this->request_body_base;
         $request_body['signatureValue'] = [
-            'algorithm' => 'RSA_SHA256',
+            'algorithm' => $this->certificate_manager->get_signature_algorithm(),
             'value' => base64_encode($signatureValue),
         ];
 
@@ -247,10 +255,8 @@ class dss_signing_service implements signing_service_interface {
                 'sigDMechanism' => null,
                 'base64UrlEncodedPayload' => false,
                 'base64UrlEncodedEtsiUComponents' => true,
-                'signatureAlgorithm' => null,
                 'digestAlgorithm' => 'SHA256',
                 'encryptionAlgorithm' => 'RSA',
-                'maskGenerationFunction' => null,
                 'referenceDigestAlgorithm' => null,
                 'contentTimestamps' => [
                     [
@@ -261,9 +267,9 @@ class dss_signing_service implements signing_service_interface {
                     ]
                 ],
                 'contentTimestampParameters' => [
-                    'digestAlgorithm' => 'SHA512',
+                    'digestAlgorithm' => $timestamp_data['digestAlgorithm'] ?? 'SHA512',
                     'canonicalizationMethod' => 'http://www.w3.org/2001/10/xml-exc-c14n#',
-                    'timestampContainerForm' => 'ASiC_S',
+                    'timestampContainerForm' => $timestamp_data['timestampContainerForm'] ?? 'ASiC_S',
                 ],
                 'signatureTimestampParameters' => [
                     'digestAlgorithm' => 'SHA512',
@@ -275,7 +281,6 @@ class dss_signing_service implements signing_service_interface {
                     'canonicalizationMethod' => 'http://www.w3.org/2001/10/xml-exc-c14n#',
                     'timestampContainerForm' => null,
                 ],
-                'signWithExpiredCertificate' => false,
                 'generateTBSWithoutCertificate' => false,
                 'imageParameters' => null,
                 'signatureIdToCounterSign' => null,
