@@ -19,11 +19,21 @@ function local_isycredentials_sign_document(string $document, string $service_ty
         throw new moodle_exception('csc_only_signing_service', 'local_isycredentials');
     }
 
-    $profile = profile_repository::for_document($document);
     $issuer = json_decode(get_config('local_isycredentials', 'elm_issuer_data'), true);
-    if (!is_array($issuer)) {
+    if (!is_array($issuer) || empty($issuer['id']) || !is_string($issuer['id'])) {
         throw new moodle_exception('csc_invalid_issuer', 'local_isycredentials');
     }
+    $document_data = json_decode($document, true);
+    if (is_array($document_data) && isset($document_data['issuer']['id'])
+            && $document_data['issuer']['id'] !== $issuer['id']) {
+        throw new moodle_exception(
+            'csc_issuer_mismatch',
+            'local_isycredentials',
+            '',
+            [$document_data['issuer']['id'], $issuer['id']]
+        );
+    }
+    $profile = profile_repository::for_issuer($issuer['id']);
     $signing_service = new package_csc_signing_service($profile, $issuer);
 
     return $signing_service->sign($document);
