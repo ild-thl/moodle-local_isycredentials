@@ -3,46 +3,28 @@
 defined('MOODLE_INTERNAL') || die();
 
 use local_isycredentials\credential\credential;
-use local_isycredentials\certificate_manager;
-use local_isycredentials\dss_signing_service;
-use local_isycredentials\edci_issuer_signing_service;
-use local_isycredentials\csc\signing_key_provider;
+use local_isycredentials\package_csc_signing_service;
 use local_isycredentials\csc\profile_repository;
 
 /**
  * Signs a document using the configured signing service.
  *
  * @param string $document The document to sign.
- * @param string $service_type The type of signing service to use ('dss', 'edci', or 'csc').
+ * @param string $service_type The signing service type. Only 'csc' is supported.
  * @return string The signed document data.
  * @throws Exception If any error occurs during the signing process.
  */
 function local_isycredentials_sign_document(string $document, string $service_type = 'csc'): string {
-    if ($service_type === 'dss') {
-        $certificate_password = get_config('local_isycredentials', 'certificate_password');
-        if (empty($certificate_password)) {
-            throw new Exception('Error: Plugin settings are not set. Please set the needed values in Site Administration.');
-        }
-        $fs = get_file_storage();
-        $context = context_system::instance();
-        $files = $fs->get_area_files($context->id, 'local_isycredentials', 'certificate_file', 0, 'itemid, filepath, filename', false);
-        if (empty($files)) {
-            throw new Exception('Error: Certificate file not found.');
-        }
-        $certificate = reset($files)->get_content();
-        $signing_service = new dss_signing_service(new certificate_manager($certificate, $certificate_password));
-    } else if ($service_type === 'csc') {
-        $profile = profile_repository::for_document($document);
-        $signing_service = new dss_signing_service(new signing_key_provider($profile));
-    } else if ($service_type === 'edci') {
-        $certificate_password = get_config('local_isycredentials', 'certificate_password');
-        if (empty($certificate_password)) {
-            throw new Exception('Error: Plugin settings are not set. Please set the needed values in Site Administration.');
-        }
-        $signing_service = new edci_issuer_signing_service($certificate_password);
-    } else {
-        throw new Exception('Error: Invalid service type specified.');
+    if ($service_type !== 'csc') {
+        throw new moodle_exception('csc_only_signing_service', 'local_isycredentials');
     }
+
+    $profile = profile_repository::for_document($document);
+    $issuer = json_decode(get_config('local_isycredentials', 'elm_issuer_data'), true);
+    if (!is_array($issuer)) {
+        throw new moodle_exception('csc_invalid_issuer', 'local_isycredentials');
+    }
+    $signing_service = new package_csc_signing_service($profile, $issuer);
 
     return $signing_service->sign($document);
 }

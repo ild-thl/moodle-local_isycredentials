@@ -55,4 +55,15 @@ class credential_test extends \advanced_testcase {
         $this->assertSame(1700100000, $credential->issuanceDate);
         $this->assertSame(1700100000, $credential->issued);
     }
+
+    public function test_optional_expiration_dates_are_not_serialized_when_unset(): void {
+        $subject = new credential_subject('subject-1', 'Ada', 'Lovelace', 'Ada Lovelace', []);
+        $language = language_concept::EN();
+        $display = new display_parameter('display-1', $language, [], $language, new localized_string('Title'));
+        $credential = new credential($subject, $display, 1700000000);
+
+        $data = $credential->toArray();
+        $this->assertArrayNotHasKey('expirationDate', $data);
+        $this->assertArrayNotHasKey('validUntil', $data);
+    }
 }

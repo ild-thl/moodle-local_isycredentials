@@ -12,34 +12,19 @@ if ($hassiteconfig) {
         PARAM_URL
     ));
 
-    $settings->add(new admin_setting_configtext(
-        'local_isycredentials/edci_signing_service_url',
-        get_string('edci_signing_service_url', 'local_isycredentials'),
-        get_string('edci_signing_service_url_desc', 'local_isycredentials'),
-        'http://issuer:8080',
-        PARAM_URL
-    ));
-
-    $settings->add(new admin_setting_configstoredfile(
-        'local_isycredentials/certificate_file',
-        get_string('certificate_file', 'local_isycredentials'),
-        get_string('certificate_file_desc', 'local_isycredentials'),
-        'certificate_file'
-    ));
-
-    $settings->add(new admin_setting_configpasswordunmask(
-        'local_isycredentials/certificate_password',
-        get_string('certificate_password', 'local_isycredentials'),
-        get_string('certificate_password_desc', 'local_isycredentials'),
-        ''
-    ));
-
     $settings->add(new admin_setting_configtextarea(
         'local_isycredentials/csc_issuer_profiles',
         get_string('csc_issuer_profiles', 'local_isycredentials'),
         get_string('csc_issuer_profiles_desc', 'local_isycredentials'),
         '{}',
         PARAM_RAW_TRIMMED
+    ));
+
+    $settings->add(new admin_setting_configcheckbox(
+        'local_isycredentials/csc_debug_logging',
+        get_string('csc_debug_logging', 'local_isycredentials'),
+        get_string('csc_debug_logging_desc', 'local_isycredentials'),
+        0
     ));
 
     $settings->add(new admin_setting_configtextarea(

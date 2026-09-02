@@ -6,23 +6,16 @@ $string['sign_document'] = 'Sign Document';
 $string['signed_document'] = 'Signed Document';
 $string['upload'] = 'Upload JSON File';
 $string['download'] = 'Download Signed Credential';
-$string['dss_service'] = 'DSS Service';
-$string['edci_service'] = 'EDCI Service';
-$string['csc_service'] = 'CSC Service';
 
 $string['isycredentials:sign'] = 'Sign credentials';
 
 // Admin settings
 $string['dss_signing_service_url'] = 'DSS URL';
 $string['dss_signing_service_url_desc'] = 'The URL of the external Digital Signature Service (DSS).';
-$string['edci_signing_service_url'] = 'EDCI-Issuer URL';
-$string['edci_signing_service_url_desc'] = 'The URL of the European Digital Credential Infrastructure (EDCI) Issuer.';
-$string['certificate_file'] = 'Certificate file';
-$string['certificate_file_desc'] = 'Upload the certificate file here.';
-$string['certificate_password'] = 'Certificate Password';
-$string['certificate_password_desc'] = 'The password for the .p12 certificate file.';
 $string['csc_issuer_profiles'] = 'CSC issuer profiles';
-$string['csc_issuer_profiles_desc'] = 'JSON map from issuer ID to CSC profile. Include the credential_id and client_id. Store only environment-variable names for the client secret and TLS certificate/key paths.';
+$string['csc_issuer_profiles_desc'] = 'JSON map from issuer ID to CSC profile. Include credential_id, client_id, sign_algo, OAuth/DSS endpoints, redirect_uri, and environment-variable names for the client secret and TLS certificate/key paths. sign_algo must match the CSC credential key type.';
+$string['csc_debug_logging'] = 'Enable CSC/DSS debug logging';
+$string['csc_debug_logging_desc'] = 'Log endpoint paths, HTTP status codes, and transport errors to Moodle developer debugging. Request bodies, headers, tokens, hashes, signatures, and credentials are never logged. Disable this outside controlled troubleshooting.';
 $string['csc_request_failed'] = 'CSC request failed.';
 $string['csc_invalid_response'] = 'CSC returned an invalid response.';
 $string['csc_missing_certificate'] = 'CSC did not return a signing certificate.';
@@ -37,6 +30,7 @@ $string['csc_invalid_profile'] = 'The CSC issuer profile is missing or has an in
 $string['csc_poll_timeout'] = 'CSC did not complete asynchronous signing before the polling limit was reached: {$a}.';
 $string['csc_profile_not_found'] = 'No CSC issuer profile is configured for issuer: {$a}.';
 $string['csc_invalid_issuer'] = 'The configured issuer does not contain a valid ID.';
+$string['csc_only_signing_service'] = 'Only CSC qualified signing is supported.';
 $string['csc_unsupported_key_type'] = 'The CSC credential certificate uses an unsupported key type.';
 $string['elm_issuer_data'] = 'ELM Issuer Data';
 $string['elm_issuer_data_desc'] = 'JSON data for the ELM issuer to be used in the credential. This has to match the signing certificates information.';

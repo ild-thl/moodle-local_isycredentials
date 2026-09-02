@@ -209,12 +209,18 @@ class credential extends base_entity {
         );
 
 
-        return (new self(
+        $credential = new self(
             $credentialSubject,
             $displayParameter,
             $badge_issued->dateissued,
-        ))->withExpirationDate($badge_issued->dateexpire)
-            ->withValidUntil($badge_issued->dateexpire);
+        );
+
+        if ($badge_issued->dateexpire !== null) {
+            $credential->withExpirationDate($badge_issued->dateexpire)
+                ->withValidUntil($badge_issued->dateexpire);
+        }
+
+        return $credential;
     }
 
     public function withExpirationDate(int $expirationDate): self {

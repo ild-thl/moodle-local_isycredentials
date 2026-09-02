@@ -6,9 +6,7 @@ require_capability('local/isycredentials:sign', context_system::instance());
 
 if (isset($_FILES['json_file']) && $_FILES['json_file']['error'] == 0) {
     $file_data = file_get_contents($_FILES['json_file']['tmp_name']);
-    $service_type = optional_param('service_type', 'csc', PARAM_ALPHA);
-
-    $signed_document = local_isycredentials_sign_document($file_data, $service_type);
+    $signed_document = local_isycredentials_sign_document($file_data);
     local_isycredentials_display_signed_document($signed_document);
 } else if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['signbadgedemo'])) {
     $to_sign_document = local_isycredentials_create_credential_from_badge(1, 4, true);
@@ -34,11 +32,6 @@ if (isset($_FILES['json_file']) && $_FILES['json_file']['error'] == 0) {
     // Upload form
     echo '<form method="post" enctype="multipart/form-data">';
     echo '<input type="file" name="json_file" accept="application/json">';
-    echo '<select name="service_type">';
-    echo '<option value="dss">' . get_string('dss_service', 'local_isycredentials') . '</option>';
-    echo '<option value="edci">' . get_string('edci_service', 'local_isycredentials') . '</option>';
-    echo '<option value="csc">' . get_string('csc_service', 'local_isycredentials') . '</option>';
-    echo '</select>';
     echo '<input type="submit" value="' . get_string('upload', 'local_isycredentials') . '">';
     echo '</form>';
 
