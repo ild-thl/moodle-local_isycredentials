@@ -32,6 +32,7 @@ $string['csc_invalid_profile'] = 'The CSC issuer profile is missing or has an in
 $string['csc_poll_timeout'] = 'CSC did not complete asynchronous signing before the polling limit was reached: {$a}.';
 $string['csc_profile_not_found'] = 'No CSC issuer profile is configured for issuer: {$a}.';
 $string['csc_invalid_issuer'] = 'The configured issuer does not contain a valid ID.';
+$string['csc_invalid_document'] = 'The document must be valid JSON.';
 $string['csc_issuer_mismatch'] = 'The document issuer ({$a->0}) does not match the configured issuer ({$a->1}).';
 $string['csc_only_signing_service'] = 'Only CSC qualified signing is supported.';
 $string['csc_unsupported_key_type'] = 'The CSC credential certificate uses an unsupported key type.';

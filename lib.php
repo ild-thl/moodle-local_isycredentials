@@ -18,13 +18,16 @@ function local_isycredentials_sign_document(string $document, string $service_ty
     if ($service_type !== 'csc') {
         throw new moodle_exception('csc_only_signing_service', 'local_isycredentials');
     }
+    $document_data = json_decode($document, true);
+    if (json_last_error() !== JSON_ERROR_NONE || !is_array($document_data)) {
+        throw new moodle_exception('csc_invalid_document', 'local_isycredentials');
+    }
 
     $issuer = json_decode(get_config('local_isycredentials', 'elm_issuer_data'), true);
     if (!is_array($issuer) || empty($issuer['id']) || !is_string($issuer['id'])) {
         throw new moodle_exception('csc_invalid_issuer', 'local_isycredentials');
     }
-    $document_data = json_decode($document, true);
-    if (is_array($document_data) && isset($document_data['issuer']['id'])
+    if (isset($document_data['issuer']['id'])
             && $document_data['issuer']['id'] !== $issuer['id']) {
         throw new moodle_exception(
             'csc_issuer_mismatch',

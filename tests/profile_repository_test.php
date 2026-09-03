@@ -34,4 +34,14 @@ class profile_repository_test extends \advanced_testcase {
             'issuer' => ['id' => 'document-issuer'],
         ]));
     }
+
+    public function test_signing_rejects_invalid_json_before_profile_lookup(): void {
+        $this->resetAfterTest(true);
+        set_config('elm_issuer_data', json_encode(['id' => 'trusted-issuer']), 'local_isycredentials');
+
+        $this->expectException(\moodle_exception::class);
+        $this->expectExceptionMessage('The document must be valid JSON.');
+
+        local_isycredentials_sign_document('{invalid-json');
+    }
 }
