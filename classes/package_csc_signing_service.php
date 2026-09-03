@@ -72,7 +72,7 @@ final class package_csc_signing_service implements signing_service_interface {
 
     public function validate(string $document): void {
         $decoded = json_decode($document, true);
-        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded) || array_is_list($decoded)) {
             throw new SigningException('Document must be a JSON object.');
         }
     }

@@ -46,6 +46,14 @@ class package_csc_signing_service_test extends \advanced_testcase {
         new package_csc_signing_service($profile, ['id' => 'trusted-issuer']);
     }
 
+    public function test_validate_rejects_json_array(): void {
+        $service = (new \ReflectionClass(package_csc_signing_service::class))->newInstanceWithoutConstructor();
+
+        $this->expectException(SigningException::class);
+        $this->expectExceptionMessage('Document must be a JSON object.');
+        $service->validate('[]');
+    }
+
     /** @return array<string, string> */
     private function profile(): array {
         return [
