@@ -19,7 +19,7 @@ function local_isycredentials_sign_document(string $document, string $service_ty
         throw new moodle_exception('csc_only_signing_service', 'local_isycredentials');
     }
     $document_data = json_decode($document, true);
-    if (json_last_error() !== JSON_ERROR_NONE || !is_array($document_data)) {
+    if (json_last_error() !== JSON_ERROR_NONE || !is_array($document_data) || array_is_list($document_data)) {
         throw new moodle_exception('csc_invalid_document', 'local_isycredentials');
     }
 
