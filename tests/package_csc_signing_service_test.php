@@ -26,6 +26,26 @@ class package_csc_signing_service_test extends \advanced_testcase {
         new package_csc_signing_service($this->profile(), ['id' => 'trusted-issuer']);
     }
 
+    public function test_constructor_rejects_insecure_dss_url_by_default(): void {
+        $this->resetAfterTest(true);
+        set_config('dss_signing_service_url', 'http://dss:8080/services/rest/signature', 'local_isycredentials');
+
+        $this->expectException(SigningException::class);
+        $this->expectExceptionMessage('DSS service URL must use HTTPS.');
+        new package_csc_signing_service($this->profile(), ['id' => 'trusted-issuer']);
+    }
+
+    public function test_constructor_rejects_profile_without_tls_certificate_configuration(): void {
+        $this->resetAfterTest(true);
+        $profile = $this->profile();
+        unset($profile['tls_certificate_path_env']);
+
+        $this->expectException(SigningException::class);
+        $this->expectExceptionMessage('CSC profile is missing: tls_certificate_path_env');
+
+        new package_csc_signing_service($profile, ['id' => 'trusted-issuer']);
+    }
+
     /** @return array<string, string> */
     private function profile(): array {
         return [

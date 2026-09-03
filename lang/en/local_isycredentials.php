@@ -12,6 +12,8 @@ $string['isycredentials:sign'] = 'Sign credentials';
 // Admin settings
 $string['dss_signing_service_url'] = 'DSS URL';
 $string['dss_signing_service_url_desc'] = 'The URL of the external Digital Signature Service (DSS).';
+$string['allow_insecure_dss_transport'] = 'Allow insecure DSS transport';
+$string['allow_insecure_dss_transport_desc'] = 'Allow HTTP for DSS communication in isolated development or test environments only. Keep disabled in production; CSC endpoints always require HTTPS.';
 $string['csc_issuer_profiles'] = 'CSC issuer profiles';
 $string['csc_issuer_profiles_desc'] = 'JSON map from issuer ID to CSC profile. Include credential_id, client_id, sign_algo, OAuth/DSS endpoints, redirect_uri, and environment-variable names for the client secret and TLS certificate/key paths. sign_algo must match the CSC credential key type.';
 $string['csc_debug_logging'] = 'Enable CSC/DSS debug logging';

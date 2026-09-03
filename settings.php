@@ -8,8 +8,15 @@ if ($hassiteconfig) {
         'local_isycredentials/dss_signing_service_url',
         get_string('dss_signing_service_url', 'local_isycredentials'),
         get_string('dss_signing_service_url_desc', 'local_isycredentials'),
-        'http://dss:8080/services/rest/signature',
+        'https://dss:8443/services/rest/signature',
         PARAM_URL
+    ));
+
+    $settings->add(new admin_setting_configcheckbox(
+        'local_isycredentials/allow_insecure_dss_transport',
+        get_string('allow_insecure_dss_transport', 'local_isycredentials'),
+        get_string('allow_insecure_dss_transport_desc', 'local_isycredentials'),
+        0
     ));
 
     $settings->add(new admin_setting_configtextarea(

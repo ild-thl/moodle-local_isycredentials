@@ -41,6 +41,10 @@ final class package_csc_signing_service implements signing_service_interface {
         if ($serviceUrl === '') {
             throw new SigningException('DSS signing service URL is not configured.');
         }
+        $allowInsecureTransport = (bool) get_config('local_isycredentials', 'allow_insecure_dss_transport');
+        if (!$allowInsecureTransport && parse_url($serviceUrl, PHP_URL_SCHEME) !== 'https') {
+            throw new SigningException('DSS service URL must use HTTPS.');
+        }
         $this->signer = new DssSigner(
             $httpClient,
             $provider,
@@ -48,7 +52,8 @@ final class package_csc_signing_service implements signing_service_interface {
             $provider,
             $provider,
             null,
-            new DssValidator($httpClient, $serviceUrl)
+            new DssValidator($httpClient, $serviceUrl, '/validation/validateDocument', $allowInsecureTransport),
+            $allowInsecureTransport
         );
         $this->issuer = $issuer;
     }
