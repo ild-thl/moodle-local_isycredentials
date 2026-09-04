@@ -33,6 +33,13 @@ abstract class base_entity {
      */
     abstract public function toArray(): array;
 
+    public function toJson(): string {
+        return json_encode(
+            $this->toArray(),
+            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
+        );
+    }
+
     /**
      * Get the identifier of the entity. This method might be overridden by subclasses to modify the identifier format to match the type of entity.
      *

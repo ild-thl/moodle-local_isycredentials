@@ -66,4 +66,17 @@ class credential_test extends \advanced_testcase {
         $this->assertArrayNotHasKey('expirationDate', $data);
         $this->assertArrayNotHasKey('validUntil', $data);
     }
+
+    public function test_json_serialization_is_deterministic_and_preserves_unicode(): void {
+        $subject = new credential_subject('subject-1', 'Zoë', 'Lovelace', 'Zoë Lovelace', []);
+        $language = language_concept::EN();
+        $display = new display_parameter('display-1', $language, [], $language, new localized_string('Titel'));
+        $credential = new credential($subject, $display, 1700000000);
+
+        $serialized = $credential->toJson();
+
+        $this->assertSame($serialized, $credential->toJson());
+        $this->assertStringContainsString('Zoë', $serialized);
+        $this->assertSame($credential->toArray(), json_decode($serialized, true));
+    }
 }

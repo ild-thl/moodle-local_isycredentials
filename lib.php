@@ -74,8 +74,11 @@ function local_isycredentials_create_credential_from_badge(int $badgeid, int $us
             ]
         ];
     } else {
-        $credential = $credential->toArray();
+        return $credential->toJson();
     }
 
-    return json_encode($credential, JSON_UNESCAPED_SLASHES, JSON_UNESCAPED_UNICODE);
+    return json_encode(
+        $credential,
+        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
+    );
 }

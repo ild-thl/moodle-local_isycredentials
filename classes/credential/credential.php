@@ -309,4 +309,5 @@ class credential extends base_entity {
 
         return $data;
     }
+
 }
