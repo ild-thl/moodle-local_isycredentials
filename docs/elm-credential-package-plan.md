@@ -61,11 +61,23 @@ graph relations. It also has deterministic UTC serialization, top-level
 document preflight validation, typed validation errors, Composer quality gates,
 CI, and focused PHPUnit coverage.
 
-The package is not yet ready for publication or Moodle integration. Remaining
-gaps are controlled vocabulary resources and membership validation, deeper
-profile validation, semantic fixture comparison, any remaining fields needed
-by the Moodle badge path, a Moodle-side mapper with integration tests, and
-clean-install, signer-handoff, and release qualification checks.
+The package is not yet ready for publication or Moodle integration. The
+legacy-derived concept rules are now enforced for the fields currently present
+in the package: credential profile, language, country, education credit,
+assessment, verification, entitlement, media encoding/file type, EQF/NQF, and
+ISCED-F education subjects. The package intentionally uses ordinary typed
+`Concept` values plus field-owned scheme assertions instead of empty subclasses
+for each legacy concept class; NQF uses the dynamic QDR scheme family.
+
+Remaining concept/model gaps include achievement-specification `dcType`,
+learning setting, mode, status, target groups, learning-outcome ESCO skills
+and reusability, accreditation controlled fields, entitlement occupation
+limits, and application-specific qualification-code schemes. Broader gaps are
+controlled vocabulary snapshots/resources and membership validation against
+loaded snapshots, deeper profile validation, semantic fixture comparison, any
+remaining fields needed by the Moodle badge path, a Moodle-side mapper with
+integration tests, and clean-install, signer-handoff, and release
+qualification checks.
 
 The graph remains intentionally incremental: unsupported profile entities must
 fail visibly rather than being silently accepted or emitted as unvalidated
