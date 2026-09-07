@@ -54,7 +54,7 @@ class badge_credential_mapper_test extends \advanced_testcase {
         return new badge_credential_mapper(
             new badge_credential_mapper_test_db(),
             static fn (string $name): mixed => [
-                'awarding_body_address_country_code' => 'NL',
+                'awarding_body_address_country_code' => 'NLD',
                 'awarding_body_address' => 'Example Street',
                 'awarding_body_legal_name' => 'Example Institute',
             ][$name] ?? null,

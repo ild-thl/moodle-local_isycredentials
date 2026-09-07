@@ -3,6 +3,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 use local_isycredentials\package_csc_signing_service;
+use local_isycredentials\badge_credential_mapper;
 use local_isycredentials\csc\profile_repository;
 
 /**

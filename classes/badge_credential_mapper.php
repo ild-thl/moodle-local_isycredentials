@@ -120,8 +120,8 @@ final class badge_credential_mapper {
 
     private function awarding_body(): Organisation {
         $countryCode = strtoupper((string) $this->config('awarding_body_address_country_code'));
-        if (preg_match('/^[A-Z]{2}$/', $countryCode) !== 1) {
-            throw new \InvalidArgumentException('The awarding body country code must contain two letters.');
+        if (preg_match('/^[A-Z]{3}$/', $countryCode) !== 1) {
+            throw new \InvalidArgumentException('The awarding body country code must contain three letters.');
         }
         $country = new Concept(
             'http://publications.europa.eu/resource/authority/country/' . $countryCode,
