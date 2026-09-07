@@ -4,6 +4,7 @@
     "description": "Moodle plugin for creating and issuing digital credentials.",
     "license": "GPL-3.0-or-later",
     "require": {
-        "isy-thl/dss-csc-signing": "^0.1"
+        "isy-thl/dss-csc-signing": "^0.1",
+        "isy-thl/european-learning-model": "^0.1"
     }
 }

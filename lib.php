@@ -2,7 +2,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-use local_isycredentials\credential\credential;
 use local_isycredentials\package_csc_signing_service;
 use local_isycredentials\csc\profile_repository;
 
@@ -62,7 +61,7 @@ function local_isycredentials_create_credential_from_badge(int $badgeid, int $us
         throw new Exception('User not found.');
     }
 
-    $credential = credential::fromBadge($badge, $user);
+    $credential = (new badge_credential_mapper())->from_badge($badge, $user);
 
     if ($withDeliveryDetails) {
         $credential = [

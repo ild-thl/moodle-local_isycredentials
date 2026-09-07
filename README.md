@@ -39,13 +39,13 @@ dss:
             DSS_VERSION: "6.5"
             JAVA_VERSION: "26"
     restart: unless-stopped
-    expose:
+php vendor/bin/phpunit local/isycredentials/tests/badge_credential_mapper_test.php
         - "8080"
 ```
 
 ## Running Tests
 
-Run these commands from the Moodle root directory. This works whether Moodle
+php vendor/bin/phpunit local/isycredentials/tests/badge_credential_mapper_test.php
 runs directly on the host, in Docker, in Podman, or in another environment.
 The PHP CLI, Composer dependencies, and the Moodle test database must be
 available in that environment.
@@ -60,11 +60,11 @@ Moodle reports that the environment was created for a different Moodle
 version. Then run the credential plugin test cases:
 
 ```sh
-php vendor/bin/phpunit local/isycredentials/tests/credential_test.php
+php vendor/bin/phpunit local/isycredentials/tests/badge_credential_mapper_test.php
 ```
 
 Run one test file individually when working on a specific area:
 
 ```sh
-php vendor/bin/phpunit local/isycredentials/tests/credential_test.php
+php vendor/bin/phpunit local/isycredentials/tests/badge_credential_mapper_test.php
 ```
