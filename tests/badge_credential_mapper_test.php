@@ -15,7 +15,7 @@ class badge_credential_mapper_test_db {
     public function get_records_sql(string $sql, array $params): array {
         return [
             (object) ['value' => 7, 'criteriatype' => 9],
-            (object) ['value' => 8, 'criteriatype' => 5],
+            (object) ['value' => 8, 'criteriatype' => 4],
         ];
     }
 

@@ -26,6 +26,9 @@ use IsyThl\EuropeanLearningModel\Edc\DisplayParameter;
 use IsyThl\EuropeanLearningModel\Edc\LearningAchievement;
 
 final class badge_credential_mapper {
+    private const COURSE_CRITERIA_TYPE = 4;
+    private const COMPETENCY_CRITERIA_TYPE = 9;
+
     private readonly object $database;
 
     /** @var \Closure(string): mixed */
@@ -158,7 +161,11 @@ final class badge_credential_mapper {
         );
         $supported = array_filter(
             $records,
-            static fn (object $record): bool => in_array((int) $record->criteriatype, [5, 9], true),
+            static fn (object $record): bool => in_array(
+                (int) $record->criteriatype,
+                [self::COURSE_CRITERIA_TYPE, self::COMPETENCY_CRITERIA_TYPE],
+                true,
+            ),
         );
         if ($supported === []) {
             throw new \InvalidArgumentException('Badge must contain a course or competency criterion.');
@@ -171,7 +178,7 @@ final class badge_credential_mapper {
     private function outcomes_for_badge(array $criteria, string $language): array {
         $records = array_filter(
             $criteria,
-            static fn (object $record): bool => (int) $record->criteriatype === 9,
+            static fn (object $record): bool => (int) $record->criteriatype === self::COMPETENCY_CRITERIA_TYPE,
         );
         if ($records === []) {
             return [];
@@ -194,7 +201,7 @@ final class badge_credential_mapper {
     private function activities_for_badge(array $criteria, Organisation $awardingBody, string $language): array {
         $records = array_filter(
             $criteria,
-            static fn (object $record): bool => (int) $record->criteriatype === 5,
+            static fn (object $record): bool => (int) $record->criteriatype === self::COURSE_CRITERIA_TYPE,
         );
         if ($records === []) {
             return [];
